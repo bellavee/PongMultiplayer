@@ -14,6 +14,7 @@
 #include "Score.h"
 #include "UI_MainMenu.h"
 #include "UI_PauseMenu.h"
+#include "UI_LostConnection.h"
 
 enum class GameState {
 	MainMenu,
@@ -30,7 +31,7 @@ public:
     void join();
     void startGame() { _state = GameState::Playing; }
     void resumeGame() { _state = GameState::Playing; }
-    void backToMenu() { _state = GameState::MainMenu; }
+    void backToMenu();
     void quit();
 
 private:
@@ -49,6 +50,7 @@ private:
     std::unique_ptr<Score> _opponentScore;
     std::unique_ptr<UI_MainMenu> _mainMenu;
     std::unique_ptr<UI_PauseMenu> _pauseMenu;
+    std::unique_ptr<UI_LostConnection> _lostConnectionPopup;
 
     GameState _state = GameState::MainMenu;
 };
