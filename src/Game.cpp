@@ -13,6 +13,8 @@ Game::Game() {
     _playerScore = std::make_unique<Score>(WINDOW_WIDTH / 4, 50.0f);
     _opponentScore = std::make_unique<Score>(3 * WINDOW_WIDTH / 4, 50.0f);
 
+	_mainMenu = std::make_unique<UI_MainMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { join(); }, [this]() { quit(); });
+
     _playerPaddle->setColor(sf::Color(66, 135, 245));
     _opponentPaddle->setColor(sf::Color(245, 66, 66));
     _ball->setColor(sf::Color(245, 197, 66));
@@ -33,6 +35,16 @@ void Game::run() {
         update(deltaTime);
         render();
     }
+}
+
+void Game::join()
+{
+
+}
+
+void Game::quit()
+{
+    _window->close();
 }
 
 void Game::processEvents() {
@@ -99,6 +111,7 @@ void Game::render() {
     _window->draw(*_ball);
     _window->draw(*_playerScore);
     _window->draw(*_opponentScore);
+    _window->draw(*_mainMenu);
 
     _window->display();
 }

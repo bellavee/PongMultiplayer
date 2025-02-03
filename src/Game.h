@@ -10,12 +10,16 @@
 #include "Paddle.h"
 #include "Ball.h"
 #include "Score.h"
+#include "UI_MainMenu.h"
 
 class Game {
 public:
     Game();
     ~Game() = default;
     void run();
+
+    void join();
+    void quit();
 
 private:
     void processEvents();
@@ -31,6 +35,7 @@ private:
     std::unique_ptr<Ball> _ball;
     std::unique_ptr<Score> _playerScore;
     std::unique_ptr<Score> _opponentScore;
+    std::unique_ptr<UI_MainMenu> _mainMenu;
 
     unsigned WINDOW_WIDTH = 1200.0f;
     unsigned WINDOW_HEIGHT = 700.0f;
