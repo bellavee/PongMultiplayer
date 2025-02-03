@@ -5,6 +5,8 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "resources.h"
+
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include "Paddle.h"
@@ -36,10 +38,6 @@ private:
     std::unique_ptr<Score> _playerScore;
     std::unique_ptr<Score> _opponentScore;
     std::unique_ptr<UI_MainMenu> _mainMenu;
-
-    unsigned WINDOW_WIDTH = 1200.0f;
-    unsigned WINDOW_HEIGHT = 700.0f;
-
 };
 
 
