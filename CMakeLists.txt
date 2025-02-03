@@ -23,7 +23,19 @@ add_executable(PongMulti src/main.cpp
         src/Score.cpp
         src/Score.h
         src/Entity.cpp
-        src/Entity.h)
+        src/Entity.h
+        src/Button.cpp
+        src/Button.h
+        src/UI_LostConnection.cpp
+        src/UI_LostConnection.h
+        src/UI_MainMenu.cpp
+        src/UI_MainMenu.h
+        src/UI_PauseMenu.cpp
+        src/UI_PauseMenu.h
+        src/InterfaceElement.cpp
+        src/InterfaceElement.h
+        src/resources.h
+)
 
 target_link_libraries(PongMulti PRIVATE
         sfml-graphics
