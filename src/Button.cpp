@@ -4,8 +4,7 @@
 
 Button::Button(const std::string& text, sf::Vector2f pos, std::function<void()> onClick) : _callback(onClick), _text(_font)
 {
-	_rectangleShape = new sf::RectangleShape({ 200, 50 });
-	_shape = _rectangleShape;
+	_shape = new sf::RectangleShape({ 200, 50 });
 
 	_shape->setFillColor(sf::Color::White);
 	_shape->setOrigin(_shape->getGlobalBounds().getCenter());

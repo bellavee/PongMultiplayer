@@ -5,6 +5,10 @@
 UI_MainMenu::UI_MainMenu(float width, float height, std::function<void()> onJoin, std::function<void()> onQuit)
 	: onJoinGame(std::move(onJoin)), onQuitGame(std::move(onQuit)), _title(_font)
 {
+	_shape = new sf::RectangleShape({ width, height });
+	_shape->setPosition({0,0});
+	_shape->setFillColor(sf::Color::Black);
+
 	if (!_font.openFromFile(BASE_FONT_PATH)) {
 		throw std::runtime_error("Failed to load font");
 	}

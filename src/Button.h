@@ -19,7 +19,5 @@ private:
 	std::function<void()> _callback;
 
 protected:
-	sf::RectangleShape* _rectangleShape;
-
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 };

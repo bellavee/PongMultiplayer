@@ -14,7 +14,6 @@ public:
 	UI_MainMenu(float width, float height, std::function<void()> onJoin, std::function<void()> onQuit);
 	~UI_MainMenu() {};
 
-	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 	void handleInput(sf::Vector2i mousePos);
 
@@ -26,5 +25,8 @@ private:
 
 	std::function<void()> onJoinGame;
 	std::function<void()> onQuitGame;
+
+protected:
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 };
 

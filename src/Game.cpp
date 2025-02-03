@@ -21,8 +21,8 @@ Game::Game() {
     _opponentPaddle->setColor(sf::Color(245, 66, 66));
     _ball->setColor(sf::Color(245, 197, 66));
 
-    if (!_playerScore->loadFont("assets/Inter-Bold.ttf") ||
-       !_opponentScore->loadFont("assets/Inter-Bold.ttf")) {
+    if (!_playerScore->loadFont(BASE_FONT_PATH) ||
+       !_opponentScore->loadFont(BASE_FONT_PATH)) {
         throw std::runtime_error("Failed to load font file");
     }
 }
@@ -53,6 +53,7 @@ void Game::processEvents() {
     while (const std::optional event = _window->pollEvent()) {
         if (event->is<sf::Event::Closed>())
             _window->close();
+
         if (event->is<sf::Event::MouseButtonPressed>())
         {
             sf::Vector2i mousePos = sf::Mouse::getPosition(*_window);
