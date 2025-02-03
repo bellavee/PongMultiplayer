@@ -5,17 +5,33 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "resources.h"
+
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include "Paddle.h"
 #include "Ball.h"
 #include "Score.h"
+#include "UI_MainMenu.h"
+#include "UI_PauseMenu.h"
+
+enum class GameState {
+	MainMenu,
+	Playing,
+	Paused
+};
 
 class Game {
 public:
     Game();
     ~Game() = default;
     void run();
+
+    void join();
+    void startGame() { _state = GameState::Playing; }
+    void resumeGame() { _state = GameState::Playing; }
+    void backToMenu() { _state = GameState::MainMenu; }
+    void quit();
 
 private:
     void processEvents();
@@ -31,10 +47,10 @@ private:
     std::unique_ptr<Ball> _ball;
     std::unique_ptr<Score> _playerScore;
     std::unique_ptr<Score> _opponentScore;
+    std::unique_ptr<UI_MainMenu> _mainMenu;
+    std::unique_ptr<UI_PauseMenu> _pauseMenu;
 
-    unsigned WINDOW_WIDTH = 1200.0f;
-    unsigned WINDOW_HEIGHT = 700.0f;
-
+    GameState _state = GameState::MainMenu;
 };
 
 
