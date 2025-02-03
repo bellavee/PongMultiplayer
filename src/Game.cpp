@@ -5,7 +5,7 @@
 
 Game::Game() {
     _window = std::make_unique<sf::RenderWindow>(
-        sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "Pong"
+        sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), WINDOW_TITLE
     );
     _window->setFramerateLimit(60);
 
@@ -16,6 +16,7 @@ Game::Game() {
     _opponentScore = std::make_unique<Score>(3 * WINDOW_WIDTH / 4, 50.0f);
 
 	_mainMenu = std::make_unique<UI_MainMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { join(); }, [this]() { quit(); });
+	_pauseMenu = std::make_unique<UI_PauseMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { resumeGame(); }, [this]() { backToMenu(); });
 
     _playerPaddle->setColor(sf::Color(66, 135, 245));
     _opponentPaddle->setColor(sf::Color(245, 66, 66));
@@ -34,14 +35,16 @@ void Game::run() {
         float deltaTime = clock.restart().asSeconds();
 
         processEvents();
-        update(deltaTime);
+		if (_state == GameState::Playing) {
+			update(deltaTime);
+		}
         render();
     }
 }
 
 void Game::join()
 {
-	std::cout << "Joining game" << std::endl;
+	startGame();
 }
 
 void Game::quit()
@@ -54,13 +57,30 @@ void Game::processEvents() {
         if (event->is<sf::Event::Closed>())
             _window->close();
 
-        if (event->is<sf::Event::MouseButtonPressed>())
-        {
-            sf::Vector2i mousePos = sf::Mouse::getPosition(*_window);
-            _mainMenu->handleInput(mousePos);
-        }
-		
+		if (_state == GameState::MainMenu) {
+			if (event->is<sf::Event::MouseButtonPressed>())
+			{
+				sf::Vector2i mousePos = sf::Mouse::getPosition(*_window);
+				_mainMenu->handleInput(mousePos);
+			}
+		}
 
+		if (_state == GameState::Paused) {
+			if (event->is<sf::Event::MouseButtonPressed>())
+			{
+				sf::Vector2i mousePos = sf::Mouse::getPosition(*_window);
+				_pauseMenu->handleInput(mousePos);
+			}
+		}
+		
+        if (event->is<sf::Event::KeyPressed>() && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))
+        {
+			if (_state == GameState::Playing)
+				_state = GameState::Paused;
+			else if (_state == GameState::Paused)
+				_state = GameState::Playing;
+        }
+        
     }
 }
 
@@ -111,17 +131,25 @@ void Game::resetBall() {
 void Game::render() {
     _window->clear(sf::Color::Black);
 
-    auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
-    centerLine->setPosition({static_cast<float>(WINDOW_WIDTH / 2), 0});
-    centerLine->setFillColor(sf::Color::White);
-    _window->draw(*centerLine);
+    if (_state == GameState::MainMenu) {
+        _window->draw(*_mainMenu);
+    }
+	if (_state == GameState::Playing || _state == GameState::Paused)
+	{
+		auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
+		centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
+		centerLine->setFillColor(sf::Color::White);
+		_window->draw(*centerLine);
 
-    _window->draw(*_playerPaddle);
-    _window->draw(*_opponentPaddle);
-    _window->draw(*_ball);
-    _window->draw(*_playerScore);
-    _window->draw(*_opponentScore);
-    _window->draw(*_mainMenu);
+		_window->draw(*_playerPaddle);
+		_window->draw(*_opponentPaddle);
+		_window->draw(*_ball);
+		_window->draw(*_playerScore);
+		_window->draw(*_opponentScore);
+	}
+	if (_state == GameState::Paused) {
+		_window->draw(*_pauseMenu);
+	}
 
     _window->display();
 }

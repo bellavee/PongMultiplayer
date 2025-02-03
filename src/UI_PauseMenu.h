@@ -8,11 +8,11 @@
 
 #include "Button.h"
 
-class UI_MainMenu : public InterfaceElement
+class UI_PauseMenu : public InterfaceElement
 {
 public:
-	UI_MainMenu(float width, float height, std::function<void()> onJoin, std::function<void()> onQuit);
-	~UI_MainMenu() {};
+	UI_PauseMenu(float width, float height, std::function<void()> onJoin, std::function<void()> onQuit);
+	~UI_PauseMenu() {};
 
 
 	void handleInput(sf::Vector2i mousePos);
