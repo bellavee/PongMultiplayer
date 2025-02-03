@@ -24,3 +24,10 @@ bool Score::loadFont(const std::string& fontPath) {
     _text.setFont(_font);
     return true;
 }
+
+void Score::reset()
+{
+    _value = 0;
+	_text.setString(std::to_string(_value));
+
+}

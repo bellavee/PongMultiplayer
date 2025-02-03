@@ -17,6 +17,7 @@ Game::Game() {
 
 	_mainMenu = std::make_unique<UI_MainMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { join(); }, [this]() { quit(); });
 	_pauseMenu = std::make_unique<UI_PauseMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { resumeGame(); }, [this]() { backToMenu(); });
+    _lostConnectionPopup = std::make_unique<UI_LostConnection>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { backToMenu(); });
 
     _playerPaddle->setColor(sf::Color(66, 135, 245));
     _opponentPaddle->setColor(sf::Color(245, 66, 66));
@@ -45,6 +46,15 @@ void Game::run() {
 void Game::join()
 {
 	startGame();
+}
+
+void Game::backToMenu()
+{
+    _state = GameState::MainMenu;
+
+	_playerScore->reset();
+	_opponentScore->reset();
+	resetBall();
 }
 
 void Game::quit()
