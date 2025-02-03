@@ -14,8 +14,23 @@ Button::Button(const std::string& text, sf::Vector2f pos, std::function<void()> 
 	_text.setString(text);
 	_text.setCharacterSize(24);
 	_text.setFillColor(sf::Color::White);
+	_text.setPosition(sf::Vector2f(pos.x + 20, pos.y + 1));
+
 
 	_shape->setFillColor(sf::Color::Blue);
 	_shape->setPosition(sf::Vector2f(pos.x + 20, pos.y + 1));
+}
+
+void Button::checkClick(sf::Vector2f mousePos)
+{
+	if (_shape->getGlobalBounds().contains(mousePos)) {
+		_callback();
+	}	
+}
+
+void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const
+{
+	InterfaceElement::draw(target, states);
+	target.draw(_text, states);
 }
 

@@ -1,6 +1,8 @@
 ﻿
 #include "Game.h"
 
+#include <iostream>
+
 Game::Game() {
     _window = std::make_unique<sf::RenderWindow>(
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "Pong"
@@ -39,7 +41,7 @@ void Game::run() {
 
 void Game::join()
 {
-
+	std::cout << "Joining game" << std::endl;
 }
 
 void Game::quit()
@@ -51,6 +53,13 @@ void Game::processEvents() {
     while (const std::optional event = _window->pollEvent()) {
         if (event->is<sf::Event::Closed>())
             _window->close();
+        if (event->is<sf::Event::MouseButtonPressed>())
+        {
+            sf::Vector2i mousePos = sf::Mouse::getPosition(*_window);
+            _mainMenu->handleInput(mousePos);
+        }
+		
+
     }
 }
 

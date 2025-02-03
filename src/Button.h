@@ -11,6 +11,8 @@ public:
 	Button(const std::string& text, sf::Vector2f pos, std::function<void()> onClick);
 	~Button() {};
 
+	void checkClick(sf::Vector2f mousePos);
+
 private:
 	sf::Font _font;
 	sf::Text _text;
@@ -19,4 +21,5 @@ private:
 protected:
 	sf::RectangleShape* _rectangleShape;
 
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 };

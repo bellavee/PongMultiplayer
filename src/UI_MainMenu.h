@@ -16,6 +16,8 @@ public:
 
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
+	void handleInput(sf::Vector2i mousePos);
+
 
 private:
 	sf::Text _title;
@@ -23,6 +25,6 @@ private:
 	std::vector<std::unique_ptr<Button>> _buttons;
 
 	std::function<void()> onJoinGame;
-	std::function<void()> onQuit;
+	std::function<void()> onQuitGame;
 };
 
