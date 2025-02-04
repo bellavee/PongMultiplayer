@@ -151,11 +151,8 @@ void Game::resetBall() {
 
 void Game::render() {
     _window->clear(sf::Color::Black);
-
-    if (_state == GameState::MainMenu) {
-        _window->draw(*_mainMenu);
-    }
-	if (_state == GameState::Playing || _state == GameState::Paused || _state == GameState::LostConnection)
+        
+	if (_state != GameState::MainMenu)
 	{
 		auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
 		centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
@@ -168,12 +165,21 @@ void Game::render() {
 		_window->draw(*_playerScore);
 		_window->draw(*_opponentScore);
 	}
-	if (_state == GameState::Paused) {
+
+    switch (_state)
+    {
+    case GameState::MainMenu:
+		_window->draw(*_mainMenu);
+        break;
+    case GameState::Paused:
 		_window->draw(*_pauseMenu);
-	}
-	if (_state == GameState::LostConnection) {
+        break;
+    case GameState::LostConnection:
 		_window->draw(*_lostConnectionPopup);
-	}
+        break;
+    default:
+        break;
+    }
 
     _window->display();
 }
