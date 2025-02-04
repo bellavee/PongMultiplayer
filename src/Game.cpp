@@ -156,16 +156,17 @@ void Game::resetBall() {
 }
 
 void Game::checkForPlayers() {
-	std::string response = _winsockClient->receiveData();
-	if (response.substr(0, 9) == "CONNECTED:") {
-		std::cout << response << std::endl;
-		int playerCount = std::stoi(response.substr(9));
+	std::string message = _winsockClient->receiveData();
+	if (message.substr(0, 9) == "CONNECTED:") {
+		std::cout << message << std::endl;
+		int playerCount = std::stoi(message.substr(9));
 		std::cout << "Connected. Current players: " << playerCount << std::endl;
 	}
 
-	else if (response == "PLAYERS_READY") {
-		std::cout << response << std::endl;
+	else if (message.substr(0, 13) == "PLAYERS_READY:") {
+		std::cout << message << std::endl;
 		std::cout << "All players ready! Starting game..." << std::endl;
+		startGame();
 	}
 }
 
@@ -232,12 +233,12 @@ void Game::render() {
 		_window->draw(*_pauseMenu);
 	}
 	if (_state == GameState::Waiting) {
-		auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
-		centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
-		centerLine->setFillColor(sf::Color::White);
-		_window->draw(*centerLine);
-		_window->draw(*_playerPaddle);
-		_window->draw(*_opponentPaddle);
+		// auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
+		// centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
+		// centerLine->setFillColor(sf::Color::White);
+		// _window->draw(*centerLine);
+		// _window->draw(*_playerPaddle);
+		// _window->draw(*_opponentPaddle);
 	}
 
     _window->display();
