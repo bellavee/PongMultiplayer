@@ -23,14 +23,19 @@ public:
     std::string receiveData();
     void disconnect();
 
+    bool isInitialized() const { return _isInitialized; }
+    bool isConnected() const { return _isConnected; }
+
 private:
     void cleanup();
     void logError(const std::string& message);
 
 private:
-    SOCKET connectSocket;
     static constexpr int DEFAULT_BUFLEN = 512;
-    bool initialized;
+
+    SOCKET _connectSocket;
+    bool _isInitialized;
+    bool _isConnected;
 
 };
 

@@ -27,6 +27,14 @@ Game::Game() {
        !_opponentScore->loadFont(BASE_FONT_PATH)) {
         throw std::runtime_error("Failed to load font file");
     }
+
+	_winsockClient = std::make_unique<WinsockClient>();
+}
+
+Game::~Game() {
+	if (_winsockClient && _winsockClient->isConnected()) {
+		_winsockClient->disconnect();
+	}
 }
 
 void Game::run() {
@@ -45,6 +53,17 @@ void Game::run() {
 
 void Game::join()
 {
+	if (!_winsockClient->initialize()) return;
+
+	if (!_winsockClient->connectToServer("127.0.0.1", "2222")) return;
+
+	_winsockClient->sendData("CONNECT");
+
+	std::string response = _winsockClient->receiveData();
+	if (response.substr(0, 9) == "CONNECTED") {
+		startGame();
+	}
+
 	startGame();
 }
 
@@ -99,11 +118,6 @@ void Game::update(float deltaTime) {
         _playerPaddle->move(-400.0f * deltaTime);
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
         _playerPaddle->move(400.0f * deltaTime);
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
-        _opponentPaddle->move(-400.0f * deltaTime);
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))
-        _opponentPaddle->move(400.0f * deltaTime);
 
     _ball->update(deltaTime);
 

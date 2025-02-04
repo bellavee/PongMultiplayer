@@ -15,6 +15,7 @@
 #include "UI_MainMenu.h"
 #include "UI_PauseMenu.h"
 #include "UI_LostConnection.h"
+#include "WinsockClient.h"
 
 enum class GameState {
 	MainMenu,
@@ -25,7 +26,7 @@ enum class GameState {
 class Game {
 public:
     Game();
-    ~Game() = default;
+    ~Game();
     void run();
 
     void join();
@@ -51,6 +52,7 @@ private:
     std::unique_ptr<UI_MainMenu> _mainMenu;
     std::unique_ptr<UI_PauseMenu> _pauseMenu;
     std::unique_ptr<UI_LostConnection> _lostConnectionPopup;
+    std::unique_ptr<WinsockClient> _winsockClient;
 
     GameState _state = GameState::MainMenu;
 };

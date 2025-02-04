@@ -2,7 +2,7 @@
 
 #include "WinsockClient.h"
 
-WinsockClient::WinsockClient() : connectSocket(INVALID_SOCKET), initialized(false) {}
+WinsockClient::WinsockClient() : _connectSocket(INVALID_SOCKET), _isInitialized(false) {}
 
 WinsockClient::~WinsockClient() {
     cleanup();
@@ -15,12 +15,12 @@ bool WinsockClient::initialize() {
         logError("WSAStartup failed");
         return false;
     }
-    initialized = true;
+    _isInitialized = true;
     return true;
 }
 
 bool WinsockClient::connectToServer(const std::string& serverAddress, const std::string& port) {
-    if (!initialized) {
+    if (!_isInitialized) {
         std::cerr << "Error: Winsock not initialized. Call initialize() first." << std::endl;
         return false;
     }
@@ -28,7 +28,7 @@ bool WinsockClient::connectToServer(const std::string& serverAddress, const std:
     struct addrinfo* result = nullptr, * ptr = nullptr, hints;
     ZeroMemory(&hints, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_socktype = SOCK_DGRAM;
     hints.ai_protocol = IPPROTO_UDP;
 
     int iResult = getaddrinfo(serverAddress.c_str(), port.c_str(), &hints, &result);
@@ -38,17 +38,17 @@ bool WinsockClient::connectToServer(const std::string& serverAddress, const std:
     }
 
     for (ptr = result; ptr != nullptr; ptr = ptr->ai_next) {
-        connectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-        if (connectSocket == INVALID_SOCKET) {
+        _connectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+        if (_connectSocket == INVALID_SOCKET) {
             freeaddrinfo(result);
             logError("Error creating socket");
             return false;
         }
 
-        iResult = connect(connectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
+        iResult = connect(_connectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
         if (iResult == SOCKET_ERROR) {
-            closesocket(connectSocket);
-            connectSocket = INVALID_SOCKET;
+            closesocket(_connectSocket);
+            _connectSocket = INVALID_SOCKET;
             continue;
         }
         break;
@@ -56,16 +56,17 @@ bool WinsockClient::connectToServer(const std::string& serverAddress, const std:
 
     freeaddrinfo(result);
 
-    if (connectSocket == INVALID_SOCKET) {
+    if (_connectSocket == INVALID_SOCKET) {
         std::cerr << "Error: Unable to connect to server" << std::endl;
         return false;
     }
 
+    _isConnected = true;
     return true;
 }
 
 bool WinsockClient::sendData(const std::string& data) {
-    int iResult = send(connectSocket, data.c_str(), static_cast<int>(data.length()), 0);
+    int iResult = send(_connectSocket, data.c_str(), static_cast<int>(data.length()), 0);
     if (iResult == SOCKET_ERROR) {
         logError("send failed");
         return false;
@@ -75,12 +76,12 @@ bool WinsockClient::sendData(const std::string& data) {
 
 std::string WinsockClient::receiveData() {
     char recvbuf[DEFAULT_BUFLEN];
-    int iResult = recv(connectSocket, recvbuf, DEFAULT_BUFLEN, 0);
+    int iResult = recv(_connectSocket, recvbuf, DEFAULT_BUFLEN, 0);
 
     if (iResult > 0) {
         return std::string(recvbuf, iResult);
     }
-    else if (iResult == 0) {
+    if (iResult == 0) {
         std::cerr << "Connection closed by server" << std::endl;
     }
     else {
@@ -90,21 +91,21 @@ std::string WinsockClient::receiveData() {
 }
 
 void WinsockClient::disconnect() {
-    int iResult = shutdown(connectSocket, SD_SEND);
+    int iResult = shutdown(_connectSocket, SD_SEND);
     if (iResult == SOCKET_ERROR) {
-        logError("shutdown failed");
+        logError("disconnect failed");
     }
     cleanup();
 }
 
 void WinsockClient::cleanup() {
-    if (connectSocket != INVALID_SOCKET) {
-        closesocket(connectSocket);
-        connectSocket = INVALID_SOCKET;
+    if (_connectSocket != INVALID_SOCKET) {
+        closesocket(_connectSocket);
+        _connectSocket = INVALID_SOCKET;
     }
-    if (initialized) {
+    if (_isInitialized) {
         WSACleanup();
-        initialized = false;
+        _isInitialized = false;
     }
 }
 
