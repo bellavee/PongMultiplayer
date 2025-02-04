@@ -35,6 +35,8 @@ add_executable(PongMulti src/main.cpp
         src/InterfaceElement.cpp
         src/InterfaceElement.h
         src/resources.h
+        src/WinsockClient.cpp
+        src/WinsockClient.h
 )
 
 target_link_libraries(PongMulti PRIVATE
