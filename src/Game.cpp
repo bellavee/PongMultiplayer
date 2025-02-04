@@ -44,9 +44,15 @@ void Game::run() {
         float deltaTime = clock.restart().asSeconds();
 
         processEvents();
+
 		if (_state == GameState::Playing) {
 			update(deltaTime);
 		}
+
+    	if (_state == GameState::Waiting) {
+    		checkForPlayers();
+    	}
+
         render();
     }
 }
@@ -58,13 +64,7 @@ void Game::join()
 	if (!_winsockClient->connectToServer("127.0.0.1", "2222")) return;
 
 	_winsockClient->sendData("CONNECT");
-
-	std::string response = _winsockClient->receiveData();
-	if (response.substr(0, 9) == "CONNECTED") {
-		startGame();
-	}
-
-	startGame();
+	waitingGame();
 }
 
 void Game::backToMenu()
@@ -125,6 +125,8 @@ void Game::update(float deltaTime) {
 
     _playerPaddle->keepInBounds(0.0f, WINDOW_HEIGHT);
     _opponentPaddle->keepInBounds(0.0f, WINDOW_HEIGHT);
+
+	processServerMessages();
 }
 
 void Game::handleCollisions() {
@@ -152,6 +154,26 @@ void Game::resetBall() {
     _ball->reset(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 }
 
+void Game::checkForPlayers() {
+	std::string response = _winsockClient->receiveData();
+	if (response.substr(0, 9) == "CONNECTED:") {
+		std::cout << response << std::endl;
+		int playerCount = std::stoi(response.substr(9));
+		std::cout << "Connected. Current players: " << playerCount << std::endl;
+}
+
+	else if (response == "PLAYERS_READY") {
+		std::cout << response << std::endl;
+		std::cout << "All players ready! Starting game..." << std::endl;
+}
+}
+
+void Game::processServerMessages() {
+	std::string message = _winsockClient->receiveData();
+	// std::cout << message << std::endl;
+
+}
+
 void Game::render() {
     _window->clear(sf::Color::Black);
 
@@ -173,6 +195,14 @@ void Game::render() {
 	}
 	if (_state == GameState::Paused) {
 		_window->draw(*_pauseMenu);
+	}
+	if (_state == GameState::Waiting) {
+		auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
+		centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
+		centerLine->setFillColor(sf::Color::White);
+		_window->draw(*centerLine);
+		_window->draw(*_playerPaddle);
+		_window->draw(*_opponentPaddle);
 	}
 
     _window->display();

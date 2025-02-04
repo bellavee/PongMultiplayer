@@ -20,7 +20,8 @@
 enum class GameState {
 	MainMenu,
 	Playing,
-	Paused
+	Paused,
+    Waiting
 };
 
 class Game {
@@ -32,6 +33,7 @@ public:
     void join();
     void startGame() { _state = GameState::Playing; }
     void resumeGame() { _state = GameState::Playing; }
+    void waitingGame() { _state = GameState::Waiting; }
     void backToMenu();
     void quit();
 
@@ -41,6 +43,8 @@ private:
     void render();
     void handleCollisions();
     void resetBall();
+    void checkForPlayers();
+    void processServerMessages();
 
 private:
     std::unique_ptr<sf::RenderWindow> _window;
