@@ -14,8 +14,7 @@ public:
 	UI_PauseMenu(float width, float height, std::function<void()> onJoin, std::function<void()> onQuit);
 	~UI_PauseMenu() {};
 
-
-	void handleInput(sf::Vector2i mousePos);
+	virtual void handleEvent(const sf::Event& event) override;
 
 
 private:
@@ -25,5 +24,6 @@ private:
 
 protected:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+
 };
 

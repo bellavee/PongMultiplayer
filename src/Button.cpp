@@ -22,11 +22,18 @@ Button::Button(const std::string& text, sf::Vector2f pos, std::function<void()> 
 	_text.setPosition(_shape->getPosition());
 }
 
-void Button::checkClick(sf::Vector2f mousePos)
+void Button::handleEvent(const sf::Event& event)
 {
+	auto mouseEvent = event.getIf<sf::Event::MouseButtonPressed>();
+
+	if (!mouseEvent)
+		return;
+
+	sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x), static_cast<float>(mouseEvent->position.y));
+
 	if (_shape->getGlobalBounds().contains(mousePos)) {
 		_callback();
-	}	
+	}
 }
 
 void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const

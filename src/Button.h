@@ -11,7 +11,7 @@ public:
 	Button(const std::string& text, sf::Vector2f pos, std::function<void()> onClick);
 	~Button() {};
 
-	void checkClick(sf::Vector2f mousePos);
+	virtual void handleEvent(const sf::Event& event) override;
 
 private:
 	sf::Font _font;

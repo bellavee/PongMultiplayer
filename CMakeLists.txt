@@ -35,6 +35,9 @@ add_executable(PongMulti src/main.cpp
         src/InterfaceElement.cpp
         src/InterfaceElement.h
         src/resources.h
+	src/TextInputField.cpp
+	src/TextInputField.cpp
+
 )
 
 target_link_libraries(PongMulti PRIVATE

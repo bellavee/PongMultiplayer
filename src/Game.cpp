@@ -45,7 +45,9 @@ void Game::run() {
 
 void Game::join()
 {
-	startGame();
+	if (_mainMenu->getIP() == "localhost") { // TODO: Connexion a l'ip
+		startGame();
+	}
 }
 
 void Game::backToMenu()
@@ -68,19 +70,11 @@ void Game::processEvents() {
             _window->close();
 
 		if (_state == GameState::MainMenu) {
-			if (event->is<sf::Event::MouseButtonPressed>())
-			{
-				sf::Vector2i mousePos = sf::Mouse::getPosition(*_window);
-				_mainMenu->handleInput(mousePos);
-			}
+			_mainMenu->handleEvent(*event);
 		}
 
 		if (_state == GameState::Paused) {
-			if (event->is<sf::Event::MouseButtonPressed>())
-			{
-				sf::Vector2i mousePos = sf::Mouse::getPosition(*_window);
-				_pauseMenu->handleInput(mousePos);
-			}
+            _pauseMenu->handleEvent(*event);
 		}
 		
         if (event->is<sf::Event::KeyPressed>() && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))

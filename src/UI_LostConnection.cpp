@@ -49,12 +49,9 @@ void UI_LostConnection::draw(sf::RenderTarget& target, sf::RenderStates states) 
 	}
 }
 
-void UI_LostConnection::handleInput(sf::Vector2i mousePos)
+void UI_LostConnection::handleEvent(const sf::Event& event)
 {
-	if (!sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) 
-		return;
-
 	for (const auto& button : _buttons) {
-		button->checkClick({ sf::Vector2f(mousePos.x, mousePos.y) });
+		button->handleEvent(event);
 	}
 }
