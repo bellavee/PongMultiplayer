@@ -37,6 +37,8 @@ add_executable(PongMulti src/main.cpp
         src/resources.h
         src/WinsockClient.cpp
         src/WinsockClient.h
+		src/TextInputField.cpp
+		src/TextInputField.cpp
 )
 
 target_link_libraries(PongMulti PRIVATE

@@ -16,4 +16,5 @@ protected:
     sf::Shape* _shape = nullptr;
 
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+	virtual void handleEvent(const sf::Event& event) = 0;
 };

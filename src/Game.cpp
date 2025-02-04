@@ -59,13 +59,15 @@ void Game::run() {
 }
 
 void Game::join()
-{
+{	
 	if (!_winsockClient->initialize()) return;
 
 	if (!_winsockClient->connectToServer("127.0.0.1", "2222")) return;
 
-	_winsockClient->sendData("CONNECT");
-	waitingGame();
+	if (_mainMenu->getIP() == "localhost") { // TODO: Connexion a l'ip
+		_winsockClient->sendData("CONNECT");
+		waitingGame();
+	}
 }
 
 void Game::backToMenu()
@@ -86,21 +88,17 @@ void Game::processEvents() {
     while (const std::optional event = _window->pollEvent()) {
         if (event->is<sf::Event::Closed>())
             _window->close();
-
-		if (_state == GameState::MainMenu) {
-			if (event->is<sf::Event::MouseButtonPressed>())
-			{
-				sf::Vector2i mousePos = sf::Mouse::getPosition(*_window);
-				_mainMenu->handleInput(mousePos);
-			}
-		}
-
-		if (_state == GameState::Paused) {
-			if (event->is<sf::Event::MouseButtonPressed>())
-			{
-				sf::Vector2i mousePos = sf::Mouse::getPosition(*_window);
-				_pauseMenu->handleInput(mousePos);
-			}
+        
+		switch (_state) {
+		case GameState::MainMenu:
+			_mainMenu->handleEvent(*event);
+			break;
+		case GameState::Paused:
+			_pauseMenu->handleEvent(*event);
+			break;
+		case GameState::LostConnection:
+			_lostConnectionPopup->handleEvent(*event);
+			break;
 		}
 		
         if (event->is<sf::Event::KeyPressed>() && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))
@@ -110,6 +108,19 @@ void Game::processEvents() {
 			else if (_state == GameState::Paused)
 				_state = GameState::Playing;
         }
+
+		if (event->is<sf::Event::KeyPressed>())
+		{
+			//simulate Lost Connection with L Key
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::L))
+				if (_state == GameState::Playing)
+					_state = GameState::LostConnection;
+
+			//simulate reconnection with R Key
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R))
+			    if (_state == GameState::LostConnection)
+				    _state = GameState::Playing;
+		}
         
     }
 }
@@ -219,11 +230,8 @@ void Game::sendPlayerData() {
 
 void Game::render() {
     _window->clear(sf::Color::Black);
-
-    if (_state == GameState::MainMenu) {
-        _window->draw(*_mainMenu);
-    }
-	if (_state == GameState::Playing || _state == GameState::Paused)
+        
+	if (_state != GameState::MainMenu)
 	{
 		auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
 		centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
@@ -236,17 +244,31 @@ void Game::render() {
 		_window->draw(*_playerScore);
 		_window->draw(*_opponentScore);
 	}
-	if (_state == GameState::Paused) {
+
+    switch (_state)
+    {
+    case GameState::MainMenu:
+		_window->draw(*_mainMenu);
+        break;
+    case GameState::Paused:
 		_window->draw(*_pauseMenu);
-	}
-	if (_state == GameState::Waiting) {
+        break;
+    case GameState::LostConnection:
+		_window->draw(*_lostConnectionPopup);
+        break;
+	case GameState::Waiting:
+	{
 		// auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
 		// centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
 		// centerLine->setFillColor(sf::Color::White);
 		// _window->draw(*centerLine);
 		// _window->draw(*_playerPaddle);
 		// _window->draw(*_opponentPaddle);
+		break;
 	}
-
+    default:
+        break;
+    }
+	
     _window->display();
 }
