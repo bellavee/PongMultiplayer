@@ -46,13 +46,13 @@ void Game::run() {
 
         processEvents();
 
-		if (_state == GameState::Playing) {
-			update(deltaTime);
-		}
-
     	if (_state == GameState::Waiting) {
     		checkForPlayers();
     	}
+
+		if (_state == GameState::Playing) {
+			update(deltaTime);
+		}
 
         render();
     }
@@ -157,16 +157,20 @@ void Game::resetBall() {
 
 void Game::checkForPlayers() {
 	std::string message = _winsockClient->receiveData();
-	if (message.substr(0, 9) == "CONNECTED:") {
-		std::cout << message << std::endl;
-		int playerCount = std::stoi(message.substr(9));
-		std::cout << "Connected. Current players: " << playerCount << std::endl;
-	}
+	if (!message.empty()) {
 
-	else if (message.substr(0, 13) == "PLAYERS_READY:") {
-		std::cout << message << std::endl;
-		std::cout << "All players ready! Starting game..." << std::endl;
-		startGame();
+		std::stringstream ss(message);
+		std::string command;
+		std::getline(ss, command, ':');
+
+		if (command == "CONNECTED") {
+			std::string countStr;
+			std::getline(ss, countStr);
+			int playerCount = std::stoi(countStr);
+		}
+		else if (command == "PLAYERS_READY") {
+			startGame();
+		}
 	}
 }
 
@@ -177,7 +181,8 @@ void Game::processServerMessages() {
 	if (message.empty()) return;
 
 	if (message.substr(0, 6) == "STATE:") {
-		// Format: "STATE:ballX-0,ballY-1,player1PosY-2,player2PosY-3, player1Score-4,player2Score-5"
+		// Format: "STATE:ballX-0,ballY-1,player1PosY-2,player1Score-3, player2PosY-4,player2Score-5"
+		std::cout << message << std::endl;
 		try {
 			std::string data = message.substr(6);
 
@@ -191,9 +196,11 @@ void Game::processServerMessages() {
 
 			if (values.size() >= 6) {
 				_ball->setPosition({values[0], values[1]});
+
 				_playerPaddle->setPosition({30.0f, values[2]});
-				_opponentPaddle->setPosition({WINDOW_WIDTH - 30.0f, values[3]});
-				_playerScore->setValue(static_cast<int>(values[4]));
+				_playerScore->setValue(static_cast<int>(values[3]));
+
+				_opponentPaddle->setPosition({WINDOW_WIDTH - 30.0f, values[4]});
 				_opponentScore->setValue(static_cast<int>(values[5]));
 			}
 		}
