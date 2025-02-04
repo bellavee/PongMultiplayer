@@ -46,6 +46,8 @@ private:
     void checkForPlayers();
     void processServerMessages();
 
+    void sendPlayerData();
+
 private:
     std::unique_ptr<sf::RenderWindow> _window;
     std::unique_ptr<Paddle> _playerPaddle;
