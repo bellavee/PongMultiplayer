@@ -19,7 +19,8 @@
 enum class GameState {
 	MainMenu,
 	Playing,
-	Paused
+	Paused,
+	LostConnection
 };
 
 class Game {

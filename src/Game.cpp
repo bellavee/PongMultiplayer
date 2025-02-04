@@ -68,13 +68,17 @@ void Game::processEvents() {
     while (const std::optional event = _window->pollEvent()) {
         if (event->is<sf::Event::Closed>())
             _window->close();
-
-		if (_state == GameState::MainMenu) {
+        
+		switch (_state) {
+		case GameState::MainMenu:
 			_mainMenu->handleEvent(*event);
-		}
-
-		if (_state == GameState::Paused) {
-            _pauseMenu->handleEvent(*event);
+			break;
+		case GameState::Paused:
+			_pauseMenu->handleEvent(*event);
+			break;
+		case GameState::LostConnection:
+			_lostConnectionPopup->handleEvent(*event);
+			break;
 		}
 		
         if (event->is<sf::Event::KeyPressed>() && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))
@@ -84,6 +88,19 @@ void Game::processEvents() {
 			else if (_state == GameState::Paused)
 				_state = GameState::Playing;
         }
+
+		if (event->is<sf::Event::KeyPressed>())
+		{
+			//simulate Lost Connection with L Key
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::L))
+				if (_state == GameState::Playing)
+					_state = GameState::LostConnection;
+
+			//simulate reconnection with R Key
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R))
+			    if (_state == GameState::LostConnection)
+				    _state = GameState::Playing;
+		}
         
     }
 }
@@ -138,7 +155,7 @@ void Game::render() {
     if (_state == GameState::MainMenu) {
         _window->draw(*_mainMenu);
     }
-	if (_state == GameState::Playing || _state == GameState::Paused)
+	if (_state == GameState::Playing || _state == GameState::Paused || _state == GameState::LostConnection)
 	{
 		auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
 		centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
@@ -153,6 +170,9 @@ void Game::render() {
 	}
 	if (_state == GameState::Paused) {
 		_window->draw(*_pauseMenu);
+	}
+	if (_state == GameState::LostConnection) {
+		_window->draw(*_lostConnectionPopup);
 	}
 
     _window->display();
