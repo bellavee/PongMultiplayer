@@ -64,10 +64,9 @@ void Game::join()
 
 	if (!_winsockClient->connectToServer("127.0.0.1", "2222")) return;
 
-	if (_mainMenu->getIP() == "localhost" && _mainMenu->getPort() == "8888") { // TODO: Connexion a l'ip
-		_winsockClient->sendData("CONNECT");
-		waitingGame();
-	}
+	_winsockClient->sendData("CONNECT");
+	waitingGame();
+	
 }
 
 void Game::backToMenu()
