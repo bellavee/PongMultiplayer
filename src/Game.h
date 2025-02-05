@@ -47,7 +47,9 @@ private:
     void checkForPlayers();
     void processServerMessages();
 
-    void sendPlayerData();
+    void sendPlayerData(int direction);
+    std::vector<std::string> splitMessage(const std::string& message, char delimiter=',');
+    std::pair<std::string, std::string> parseCommand(const std::string& message);
 
 private:
     std::unique_ptr<sf::RenderWindow> _window;
@@ -62,6 +64,11 @@ private:
     std::unique_ptr<WinsockClient> _winsockClient;
 
     GameState _state = GameState::MainMenu;
+
+    int _lastDirection = 0;
+    int _playerId = 0;
+    int _paddleSpeed = 0;
+
 };
 
 
