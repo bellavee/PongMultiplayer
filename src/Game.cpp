@@ -1,8 +1,9 @@
-﻿
-#include "Game.h"
-
+﻿#include "Game.h"
+#include <nlohmann/json.hpp>
 #include <iostream>
 #include <sstream>
+
+using json = nlohmann::json;
 
 Game::Game() {
     _window = std::make_unique<sf::RenderWindow>(
@@ -64,7 +65,8 @@ void Game::join()
 
 	if (!_winsockClient->connectToServer(_mainMenu->getIP(), _mainMenu->getPort())) return;
 
-	_winsockClient->sendData("CONNECT");
+	json messageJson = {{"type", "CONNECTION"}};
+	_winsockClient->sendData(messageJson.dump());
 	waitingGame();
 }
 

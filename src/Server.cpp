@@ -1,6 +1,8 @@
 #include "Server.h"
 #include "resources.h"
 
+using json = nlohmann::json;
+
 Server::Server() 
 	: _window(std::make_unique<sf::RenderWindow>(sf::VideoMode({ WINDOW_WIDTH, WINDOW_HEIGHT }), "Server"))
 	, _serverMenu(nullptr)
@@ -44,7 +46,6 @@ void Server::Run()
 	std::cout << "Fran " << std::endl;
 	while (_window->isOpen()) {
 		processEvents();
-		render();
 		switch (_state)
 		{
 		case ServerState::NOT_RUNNING:
@@ -58,6 +59,8 @@ void Server::Run()
 		default:
 			break;
 		}
+		render();
+
 	}
 }
 
@@ -89,7 +92,8 @@ void Server::readMessage()
 		return;
 	}
 	recvbuf.resize(recv_len);
-	std::cout << "Data: " << recvbuf << std::endl;
+	json recvbufJson = json::parse(recvbuf);
+	std::cout << "Data: " << recvbufJson.dump(4) << std::endl;
 	/*to rmv */ sendMessage("Well received", client);
 }
 

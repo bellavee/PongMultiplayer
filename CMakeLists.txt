@@ -57,15 +57,31 @@ add_executable(Server src/mainServer.cpp
         src/UI_ServerRunning.cpp
 )
 
+include(FetchContent)
+
+FetchContent_Declare(
+    json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.2
+)
+
+FetchContent_MakeAvailable(json)
+
+#target_include_directories(nlohmann_json INTERFACE ${json_SOURCE_DIR})
+
 target_link_libraries(PongMulti PRIVATE
         sfml-graphics
         sfml-audio
+        nlohmann_json
 )
 
 target_link_libraries(Server PRIVATE
         sfml-graphics
         sfml-audio
+        nlohmann_json
 )
+
+
 
 target_compile_features(PongMulti PRIVATE cxx_std_17)
 target_compile_features(Server PRIVATE cxx_std_17)

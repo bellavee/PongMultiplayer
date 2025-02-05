@@ -1,6 +1,6 @@
 #ifndef SERVER_H
 #define SERVER_H
-
+#include <nlohmann/json.hpp>
 #include <string>
 #include<winsock2.h>
 #include <iostream>
@@ -15,6 +15,7 @@ enum class ServerState {
 	RUNNING,
 	CLOSED
 };
+
 
 class Server
 {
