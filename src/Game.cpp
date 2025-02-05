@@ -20,9 +20,9 @@ Game::Game() {
 	_pauseMenu = std::make_unique<UI_PauseMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { resumeGame(); }, [this]() { backToMenu(); });
     _lostConnectionPopup = std::make_unique<UI_LostConnection>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { backToMenu(); });
 
-    _playerPaddle->setColor(sf::Color(66, 135, 245)); // blue
-    _opponentPaddle->setColor(sf::Color(245, 66, 66)); // red
-    _ball->setColor(sf::Color(245, 197, 66)); // yellow
+    _playerPaddle->setColor(sf::Color(66, 135, 245));
+    _opponentPaddle->setColor(sf::Color(245, 66, 66));
+    _ball->setColor(sf::Color(245, 197, 66));
 
     if (!_playerScore->loadFont(BASE_FONT_PATH) ||
        !_opponentScore->loadFont(BASE_FONT_PATH)) {
@@ -62,12 +62,11 @@ void Game::join()
 {	
 	if (!_winsockClient->initialize()) return;
 
-	if (!_winsockClient->connectToServer("127.0.0.1", "8888")) return;
+	if (!_winsockClient->connectToServer("127.0.0.1", "2222")) return;
 
-	// if (_mainMenu->getIP() == "localhost") { // TODO: Connexion a l'ip
-		_winsockClient->sendData("CONNECT");
-		waitingGame();
-	// }
+	_winsockClient->sendData("CONNECT");
+	waitingGame();
+	
 }
 
 void Game::backToMenu()
@@ -101,7 +100,7 @@ void Game::processEvents() {
 			break;
 		}
 		
-        if (event->is<sf::Event::KeyPressed>() && isKeyPressed(sf::Keyboard::Key::Escape))
+        if (event->is<sf::Event::KeyPressed>() && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))
         {
 			if (_state == GameState::Playing)
 				_state = GameState::Paused;
@@ -112,12 +111,12 @@ void Game::processEvents() {
 		if (event->is<sf::Event::KeyPressed>())
 		{
 			//simulate Lost Connection with L Key
-			if (isKeyPressed(sf::Keyboard::Key::L))
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::L))
 				if (_state == GameState::Playing)
 					_state = GameState::LostConnection;
 
 			//simulate reconnection with R Key
-            if (isKeyPressed(sf::Keyboard::Key::R))
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R))
 			    if (_state == GameState::LostConnection)
 				    _state = GameState::Playing;
 		}
@@ -126,34 +125,22 @@ void Game::processEvents() {
 }
 
 void Game::update(float deltaTime) {
-	if (_state != GameState::Playing) return;
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
+        _playerPaddle->move(-400.0f * deltaTime);
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
+        _playerPaddle->move(400.0f * deltaTime);
 
-	int direction = 0;
-	if (isKeyPressed(sf::Keyboard::Key::W) || isKeyPressed(sf::Keyboard::Key::Z)) {
-		direction = -1;
-		_predictedPaddleY -= _paddleSpeed * deltaTime;
-	} else if (isKeyPressed(sf::Keyboard::Key::S)) {
-		direction = 1;
-		_predictedPaddleY += _paddleSpeed * deltaTime;
-	}
+    // _ball->update(deltaTime);
+    // handleCollisions();
 
-	// for debug
-	_predictedPaddleY = std::max(PADDLE_HEIGHT/2.0f, std::min(_predictedPaddleY, static_cast<float>(WINDOW_HEIGHT) - PADDLE_HEIGHT/2.0f));
+    _playerPaddle->keepInBounds(0.0f, WINDOW_HEIGHT);
+    // _opponentPaddle->keepInBounds(0.0f, WINDOW_HEIGHT);
 
-	if (_playerId == 1) {
-		_playerPaddle->setPosition({30.0f, _predictedPaddleY});
-	} else {
-		_playerPaddle->setPosition({WINDOW_WIDTH - 30.0f, _predictedPaddleY});
-	}
-
-	if (direction != _lastDirection) {
-		sendPlayerData(direction);
-		_lastDirection = direction;
-	}
+	sendPlayerData();
 	processServerMessages();
 }
 
-void Game::handleCollisions() { // not use here
+void Game::handleCollisions() {
     if (_ball->getPosition().y <= 0 ||
         _ball->getPosition().y + _ball->getRadius() >= WINDOW_HEIGHT) {
         _ball->reverseYVelocity();
@@ -181,21 +168,17 @@ void Game::resetBall() {
 void Game::checkForPlayers() {
 	std::string message = _winsockClient->receiveData();
 	if (!message.empty()) {
-		auto [command, data] = parseCommand(message);
 
-		if (command == "CONNECTED") { // ex: CONNECT:1 -> playerId=1
-			auto tokens = splitMessage(data);
-			if (!tokens.empty()) {
-				_playerId = std::stoi(tokens[0]);
-				std::cout << "Connected as player " << _playerId << std::endl;
-			}
+		std::stringstream ss(message);
+		std::string command;
+		std::getline(ss, command, ':');
+
+		if (command == "CONNECTED") {
+			std::string countStr;
+			std::getline(ss, countStr);
+			int playerCount = std::stoi(countStr);
 		}
-		else if (command == "PLAYERS_READY") { // ex: PLAYERS_READY:400
-			auto tokens = splitMessage(data);
-			if (!tokens.empty()) {
-				_paddleSpeed = std::stoi(tokens[0]);
-				std::cout << "Paddle speed " << _paddleSpeed << std::endl;
-			}
+		else if (command == "PLAYERS_READY") {
 			startGame();
 		}
 	}
@@ -207,73 +190,39 @@ void Game::processServerMessages() {
 	std::string message = _winsockClient->receiveData();
 	if (message.empty()) return;
 
-	auto [command, data] = parseCommand(message);
-	// std::cout << command << "-" << data << std::endl;
+	if (message.substr(0, 6) == "STATE:") {
+		// Format: "STATE:ballX-0,ballY-1,player1PosY-2,player1Score-3, player2PosY-4,player2Score-5"
+		std::cout << message << std::endl;
+		try {
+			std::string data = message.substr(6);
 
-	try {
-		if (command == "BALL") { // BALL:x,y
-			auto values = splitMessage(data);
-			if (values.size() >= 2) {
-				float x = std::stof(values[0]);
-				float y = std::stof(values[1]);
-				_ball->setPosition({x, y});
+			std::stringstream ss(data);
+			std::vector<float> values;
+			std::string token;
+
+			while (std::getline(ss, token, ',')) {
+				values.push_back(std::stof(token));
+			}
+
+			if (values.size() >= 6) {
+				_ball->setPosition({values[0], values[1]});
+
+				_playerPaddle->setPosition({30.0f, values[2]});
+				_playerScore->setValue(static_cast<int>(values[3]));
+
+				_opponentPaddle->setPosition({WINDOW_WIDTH - 30.0f, values[4]});
+				_opponentScore->setValue(static_cast<int>(values[5]));
 			}
 		}
-		else if (command == "PADDLES") { // PADDLES:id1,pos1,id2,pos2
-			auto tokens = splitMessage(data);
-			for (size_t i = 0; i < tokens.size(); i += 2) {
-				if (i + 1 >= tokens.size()) break;
-
-				int playerId = std::stoi(tokens[i]);
-				float paddleY = std::stof(tokens[i + 1]);
-
-				if (playerId == 1) { // player is the  paddle blue
-					if (_playerId == 1) {
-						float currentY = _playerPaddle->getPosition().y;
-						if (std::abs(paddleY - currentY) > 10.0f) {
-							_playerPaddle->setPosition({30.0f, paddleY});
-						}
-					} else {
-						_opponentPaddle->setPosition({30.0f, paddleY});
-					}
-				}
-				else if (playerId == 2) {
-					if (_playerId == 2) {
-						float currentY = _playerPaddle->getPosition().y;
-						if (std::abs(paddleY - currentY) > 10.0f) {
-							_playerPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
-						}
-					} else {
-						_opponentPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
-					}
-				}
-			}
+		catch (const std::exception& e) {
+			std::cerr << "Error parsing state: " << e.what() << std::endl;
 		}
-		else if (command == "SCORES") { // SCORES:id1,score1,id2,score2
-			auto tokens = splitMessage(data);
-			for (size_t i = 0; i < tokens.size(); i += 2) {
-				if (i + 1 >= tokens.size()) break;
-
-				int playerId = std::stoi(tokens[i]);
-				int score = std::stoi(tokens[i + 1]);
-
-				if (playerId == _playerId) {
-					_playerScore->update(score);
-				} else {
-					_opponentScore->update(score);
-				}
-			}
-		}
-	}
-	catch (const std::exception& e) {
-		std::cerr << "Error parsing message: " << e.what() << std::endl;
 	}
 }
 
-void Game::sendPlayerData(int direction) {
+void Game::sendPlayerData() {
 	if (_winsockClient && _winsockClient->isConnected()) {
-		std::string paddleMsg = "PADDLE:" + std::to_string(direction);
-		// std::cout << paddleMsg << std::endl;
+		std::string paddleMsg = "PADDLE:" + std::to_string(_playerPaddle->getPosition().y);
 		_winsockClient->sendData(paddleMsg);
 	}
 }
@@ -306,38 +255,19 @@ void Game::render() {
     case GameState::LostConnection:
 		_window->draw(*_lostConnectionPopup);
         break;
-	case GameState::Waiting:
-	{
-		// black window
-		break;
-	}
+	  case GameState::Waiting:
+	  {
+      // auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
+      // centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
+      // centerLine->setFillColor(sf::Color::White);
+      // _window->draw(*centerLine);
+      // _window->draw(*_playerPaddle);
+      // _window->draw(*_opponentPaddle);
+		  break;
+	  }
     default:
         break;
     }
-	
+
     _window->display();
-}
-
-std::vector<std::string> Game::splitMessage(const std::string& message, char delimiter) {
-	std::vector<std::string> tokens;
-	std::stringstream ss(message);
-	std::string token;
-
-	while (std::getline(ss, token, delimiter)) {
-		tokens.push_back(token);
-	}
-
-	return tokens;
-}
-
-std::pair<std::string, std::string> Game::parseCommand(const std::string& message) {
-	size_t pos = message.find(':');
-	if (pos == std::string::npos) {
-		return {"", ""};
-	}
-
-	return {
-		message.substr(0, pos), // command
-		message.substr(pos + 1)  // data
-	};
 }
