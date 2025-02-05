@@ -14,9 +14,7 @@ public:
 	UI_LostConnection(float width, float height, std::function<void()> onBackToMenu);
 	~UI_LostConnection() {};
 
-
-	void handleInput(sf::Vector2i mousePos);
-
+	virtual void handleEvent(const sf::Event& event) override;
 
 private:
 	sf::Text _title;
