@@ -4,6 +4,7 @@
 
 #include "Entity.h"
 #include <SFML/Graphics.hpp>
+#include "resources.h"
 
 class Ball : public Entity {
 public:
@@ -17,10 +18,8 @@ public:
     float getRadius() const;
 
 private:
-    sf::CircleShape* _circleShape;  // Concrete shape type
+    sf::CircleShape* _circleShape;
     sf::Vector2f _velocity;
-    const float SIZE = 20.0f;
-    const float SPEED = 400.0f;
 };
 
 

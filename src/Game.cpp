@@ -131,15 +131,25 @@ void Game::update(float deltaTime) {
 	int direction = 0;
 	if (isKeyPressed(sf::Keyboard::Key::W) || isKeyPressed(sf::Keyboard::Key::Z)) {
 		direction = -1;
+		_predictedPaddleY -= _paddleSpeed * deltaTime;
 	} else if (isKeyPressed(sf::Keyboard::Key::S)) {
 		direction = 1;
+		_predictedPaddleY += _paddleSpeed * deltaTime;
+	}
+
+	// for debug
+	_predictedPaddleY = std::max(PADDLE_HEIGHT/2.0f, std::min(_predictedPaddleY, static_cast<float>(WINDOW_HEIGHT) - PADDLE_HEIGHT/2.0f));
+
+	if (_playerId == 1) {
+		_playerPaddle->setPosition({30.0f, _predictedPaddleY});
+	} else {
+		_playerPaddle->setPosition({WINDOW_WIDTH - 30.0f, _predictedPaddleY});
 	}
 
 	if (direction != _lastDirection) {
 		sendPlayerData(direction);
 		_lastDirection = direction;
 	}
-
 	processServerMessages();
 }
 
@@ -180,7 +190,12 @@ void Game::checkForPlayers() {
 				std::cout << "Connected as player " << _playerId << std::endl;
 			}
 		}
-		else if (command == "PLAYERS_READY") { // ex: PLAYERS_READY:2
+		else if (command == "PLAYERS_READY") { // ex: PLAYERS_READY:400
+			auto tokens = splitMessage(data);
+			if (!tokens.empty()) {
+				_paddleSpeed = std::stoi(tokens[0]);
+				std::cout << "Paddle speed " << _paddleSpeed << std::endl;
+			}
 			startGame();
 		}
 	}

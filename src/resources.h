@@ -10,3 +10,9 @@ constexpr const char* WINDOW_TITLE = "Pong! Multiplayer";
 constexpr const char* BASE_FONT_PATH = "assets/Inter-Bold.ttf";
 constexpr const char* TITLE_FONT_PATH = "assets/pingpong.ttf";
 
+// Paddle
+const float PADDLE_WIDTH = 30.0f;
+const float PADDLE_HEIGHT = 150.0f;
+
+// Ball
+const float BALL_RADIUS = 20.0f;
