@@ -2,6 +2,7 @@
 #include "resources.h"
 
 TextInputField::TextInputField(sf::Vector2f pos, sf::Vector2f size, const std::string& displayText, AllowedCharacters allowedchars) : _text(_font), _userText(_font), _position(pos), _isActive(false), _allowedChars(allowedchars)
+
 {
 	_shape.setSize(size);
 	_shape.setFillColor(sf::Color::Black);
@@ -18,6 +19,7 @@ TextInputField::TextInputField(sf::Vector2f pos, sf::Vector2f size, const std::s
 	_text.setCharacterSize(18);
 	_text.setFillColor(sf::Color(255, 255, 255, 150));
 	_text.setString(displayText);
+
 	sf::FloatRect textBounds = _text.getLocalBounds();
 	_text.setOrigin({ textBounds.position + textBounds.size / 2.f });
 	_text.setPosition(_shape.getPosition());
@@ -43,6 +45,7 @@ void TextInputField::handleEvent(const sf::Event& event)
 		{
 			sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x), static_cast<float>(mouseEvent->position.y));
 			_isActive = _shape.getGlobalBounds().contains(mousePos);			
+
 		}
 	}
 	else
@@ -81,7 +84,6 @@ void TextInputField::handleEvent(const sf::Event& event)
 					default:
 							break;
 					}
-
 					_userText.setString(_userText.getString() + static_cast<char>(textEvent->unicode));
 				}
 				sf::FloatRect userTextBounds = _userText.getLocalBounds();

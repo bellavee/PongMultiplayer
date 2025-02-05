@@ -15,23 +15,26 @@
 #include "UI_MainMenu.h"
 #include "UI_PauseMenu.h"
 #include "UI_LostConnection.h"
+#include "WinsockClient.h"
 
 enum class GameState {
 	MainMenu,
 	Playing,
 	Paused,
+  Waiting,
 	LostConnection
 };
 
 class Game {
 public:
     Game();
-    ~Game() = default;
+    ~Game();
     void run();
 
     void join();
     void startGame() { _state = GameState::Playing; }
     void resumeGame() { _state = GameState::Playing; }
+    void waitingGame() { _state = GameState::Waiting; }
     void backToMenu();
     void quit();
 
@@ -41,6 +44,10 @@ private:
     void render();
     void handleCollisions();
     void resetBall();
+    void checkForPlayers();
+    void processServerMessages();
+
+    void sendPlayerData();
 
 private:
     std::unique_ptr<sf::RenderWindow> _window;
@@ -52,6 +59,7 @@ private:
     std::unique_ptr<UI_MainMenu> _mainMenu;
     std::unique_ptr<UI_PauseMenu> _pauseMenu;
     std::unique_ptr<UI_LostConnection> _lostConnectionPopup;
+    std::unique_ptr<WinsockClient> _winsockClient;
 
     GameState _state = GameState::MainMenu;
 };

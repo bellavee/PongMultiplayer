@@ -22,11 +22,13 @@ public:
 	std::string getIP() const { return _textFields[0]->getText(); }
 	std::string getPort() const { return _textFields[1]->getText(); }
 
+
 private:
 	sf::Text _title;
 	sf::Font _font;
 	std::vector<std::unique_ptr<Button>> _buttons;
 	std::vector<std::unique_ptr<TextInputField>> _textFields;
+
 
 protected:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;

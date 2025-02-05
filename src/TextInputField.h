@@ -15,6 +15,7 @@ enum class AllowedCharacters {
 class TextInputField : public InterfaceElement {
 public:
 	TextInputField(sf::Vector2f pos, sf::Vector2f size, const std::string& displayText = std::string("SampleText"), AllowedCharacters allowedchars = AllowedCharacters::All);
+
 	~TextInputField() {};
 
 	std::string getText() const { return _userText.getString(); }
