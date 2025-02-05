@@ -62,7 +62,7 @@ void Game::join()
 {	
 	if (!_winsockClient->initialize()) return;
 
-	if (!_winsockClient->connectToServer("127.0.0.1", "8888")) return;
+	if (!_winsockClient->connectToServer(_mainMenu->getIP(), _mainMenu->getPort())) return;
 
 	_winsockClient->sendData("CONNECT");
 	waitingGame();

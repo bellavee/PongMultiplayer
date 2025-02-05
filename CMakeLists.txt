@@ -44,6 +44,17 @@ add_executable(PongMulti src/main.cpp
 add_executable(Server src/mainServer.cpp
         src/Server.cpp
         src/Server.h
+        src/InterfaceElement.cpp
+        src/InterfaceElement.h
+        src/UI_ServerMenu.h
+        src/UI_ServerMenu.cpp
+        src/resources.h
+        src/TextInputField.cpp
+	src/TextInputField.cpp
+        src/Button.cpp
+        src/Button.h
+        src/UI_ServerRunning.h
+        src/UI_ServerRunning.cpp
 )
 
 target_link_libraries(PongMulti PRIVATE

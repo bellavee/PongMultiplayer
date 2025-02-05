@@ -1,6 +1,12 @@
 #include "Server.h"
+#include "resources.h"
 
-Server::Server()
+Server::Server() 
+	: _window(std::make_unique<sf::RenderWindow>(sf::VideoMode({ WINDOW_WIDTH, WINDOW_HEIGHT }), "Server"))
+	, _serverMenu(nullptr)
+	, _serverRunning(nullptr)
+	, m_isRunning(false)
+	, _state(ServerState::NOT_RUNNING)
 {
 }
 
@@ -18,7 +24,7 @@ void Server::Launch(const std::string& ipAddress, int port)
 		std::cout << "Could not create socket : " + WSAGetLastError() << std::endl;
 		return;
 	}
-	std::cout << "Socket created." << std::endl;;
+	std::cout << "Socket created." << std::endl;
 
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = inet_addr(ipAddress.c_str());
@@ -28,21 +34,45 @@ void Server::Launch(const std::string& ipAddress, int port)
 		std::cout << "Bind failed with error code : " + WSAGetLastError() << std::endl;
 		return;
 	}
-	std::cout << "Lauching done" << std::endl;;
+	m_isRunning = true;
+	_serverRunning->setContent("Server running at " + ipAddress + " at port " + std::to_string(port));
+	_state = ServerState::RUNNING;
 }
 
 void Server::Run()
 {
-	while (1)
-	{
-		readMessage();
+	std::cout << "Fran " << std::endl;
+	while (_window->isOpen()) {
+		processEvents();
+		render();
+		switch (_state)
+		{
+		case ServerState::NOT_RUNNING:
+			break;
+		case ServerState::RUNNING:
+			readMessage();
+			break;
+		case ServerState::CLOSED:
+			Close();
+			break;
+		default:
+			break;
+		}
 	}
 }
 
 void Server::Close()
 {
+	_window->close();
+	if (!m_isRunning)
+		return;
 	closesocket(m_serverSocket);
 	WSACleanup();
+}
+
+void Server::Connect()
+{
+	Launch(_serverMenu->getIP(), std::stoi(_serverMenu->getPort()));
 }
 
 void Server::readMessage()
@@ -81,5 +111,50 @@ void Server::initWinsok()
 
 void Server::initWindow()
 {
+	_window->setFramerateLimit(60);
+	_serverMenu = std::make_unique<UI_ServerMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { this->Connect(); }, [this]() { this->Close(); });
+	_serverRunning = std::make_unique<UI_ServerRunning>(WINDOW_WIDTH, WINDOW_HEIGHT);
+}
+
+void Server::processEvents()
+{
+	while (const std::optional event = _window->pollEvent()) {
+		if (event->is<sf::Event::Closed>()) {
+			_state = ServerState::CLOSED;
+			Close();
+		}
+		switch (_state)
+		{
+		case ServerState::NOT_RUNNING:
+			_serverMenu->handleEvent(*event);
+			break;
+		case ServerState::RUNNING:
+			_serverRunning->handleEvent(*event);
+			break;
+		case ServerState::CLOSED:
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void Server::render()
+{
+	_window->clear(sf::Color::Black);
+	switch (_state)
+	{
+	case ServerState::NOT_RUNNING:
+		_window->draw(*_serverMenu);
+		break;
+	case ServerState::RUNNING:
+		_window->draw(*_serverRunning);
+		break;
+	case ServerState::CLOSED:
+		break;
+	default:
+		break;
+	}
+	_window->display();
 }
 
