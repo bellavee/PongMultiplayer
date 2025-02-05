@@ -64,10 +64,8 @@ void Game::join()
 
 	if (!_winsockClient->connectToServer("127.0.0.1", "8888")) return;
 
-	// if (_mainMenu->getIP() == "localhost") { // TODO: Connexion a l'ip
-		_winsockClient->sendData("CONNECT");
-		waitingGame();
-	// }
+	_winsockClient->sendData("CONNECT");
+	waitingGame();
 }
 
 void Game::backToMenu()
@@ -306,15 +304,16 @@ void Game::render() {
     case GameState::LostConnection:
 		_window->draw(*_lostConnectionPopup);
         break;
-	case GameState::Waiting:
-	{
-		// black window
-		break;
-	}
+
+	  case GameState::Waiting:
+	  {
+		  // black window
+		  break;
+	  }
     default:
         break;
     }
-	
+
     _window->display();
 }
 
