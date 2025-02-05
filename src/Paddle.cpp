@@ -1,9 +1,9 @@
 ﻿#include "Paddle.h"
 
 Paddle::Paddle(float x, float y) {
-    _rectangleShape = new sf::RectangleShape(sf::Vector2f(WIDTH, HEIGHT));
+    _rectangleShape = new sf::RectangleShape(sf::Vector2f(PADDLE_WIDTH, PADDLE_HEIGHT));
     _shape = _rectangleShape;
-    setPosition({x - WIDTH/2, y - HEIGHT/2});
+    setPosition({x - PADDLE_WIDTH/2, y - PADDLE_HEIGHT/2});
     _rectangleShape->setFillColor(sf::Color::White);
 }
 
@@ -19,10 +19,10 @@ void Paddle::keepInBounds(float minY, float maxY) {
     sf::Vector2f pos = getPosition();
     if (pos.y < minY)
         setPosition({pos.x, minY});
-    else if (pos.y + HEIGHT > maxY)
-        setPosition({pos.x, maxY - HEIGHT});
+    else if (pos.y + PADDLE_WIDTH > maxY)
+        setPosition({pos.x, maxY - PADDLE_HEIGHT});
 }
 
 float Paddle::getHeight() const {
-    return HEIGHT;
+    return PADDLE_HEIGHT;
 }

@@ -31,3 +31,8 @@ void Score::reset()
 	_text.setString(std::to_string(_value));
 
 }
+
+void Score::update(int value) {
+    _value = value;
+    _text.setString(std::to_string(_value));
+}
