@@ -45,7 +45,7 @@ void Game::run() {
 
 void Game::join()
 {
-	if (_mainMenu->getIP() == "localhost") { // TODO: Connexion a l'ip
+	if (_mainMenu->getIP() == "localhost" && _mainMenu->getPort() == "8888") { // TODO: Connexion a l'ip
 		startGame();
 	}
 }

@@ -5,9 +5,16 @@
 #include <string>
 #include "SFML/Window/Event.hpp"
 
+enum class AllowedCharacters {
+	All,
+	Numbers,
+	Letters,
+	Alphanumeric
+};
+
 class TextInputField : public InterfaceElement {
 public:
-	TextInputField(sf::Vector2f pos, sf::Vector2f size);
+	TextInputField(sf::Vector2f pos, sf::Vector2f size, const std::string& displayText = std::string("SampleText"), AllowedCharacters allowedchars = AllowedCharacters::All);
 	~TextInputField() {};
 
 	std::string getText() const { return _userText.getString(); }
@@ -24,6 +31,7 @@ private:
 	bool _isActive;
 
 	sf::Vector2f _position;
+	AllowedCharacters _allowedChars;
 
 protected:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
