@@ -70,7 +70,7 @@ void TextInputField::handleEvent(const sf::Event& event)
 					switch (_allowedChars)
 					{
 					case AllowedCharacters::Numbers:
-						if (textEvent->unicode < 48 || textEvent->unicode > 57)
+						if ((textEvent->unicode < 48 || textEvent->unicode > 57) && textEvent->unicode != 46)
 							return;
 						break;
 					case AllowedCharacters::Letters:
@@ -78,7 +78,7 @@ void TextInputField::handleEvent(const sf::Event& event)
 							return;
 						break;
 					case AllowedCharacters::Alphanumeric:
-						if ((textEvent->unicode < 48 || textEvent->unicode > 57) && (textEvent->unicode < 65 || textEvent->unicode > 90) && (textEvent->unicode < 97 || textEvent->unicode > 122))
+						if ((textEvent->unicode < 48 || textEvent->unicode > 57) && (textEvent->unicode < 65 || textEvent->unicode > 90) && (textEvent->unicode < 97 || textEvent->unicode > 122) && textEvent->unicode != 46)
 							return;
 						break;
 					default:
