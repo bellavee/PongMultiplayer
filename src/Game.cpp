@@ -64,7 +64,7 @@ void Game::join()
 
 	if (!_winsockClient->connectToServer("127.0.0.1", "2222")) return;
 
-	if (_mainMenu->getIP() == "localhost") { // TODO: Connexion a l'ip
+	if (_mainMenu->getIP() == "localhost" && _mainMenu->getPort() == "8888") { // TODO: Connexion a l'ip
 		_winsockClient->sendData("CONNECT");
 		waitingGame();
 	}
@@ -256,19 +256,19 @@ void Game::render() {
     case GameState::LostConnection:
 		_window->draw(*_lostConnectionPopup);
         break;
-	case GameState::Waiting:
-	{
-		// auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
-		// centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
-		// centerLine->setFillColor(sf::Color::White);
-		// _window->draw(*centerLine);
-		// _window->draw(*_playerPaddle);
-		// _window->draw(*_opponentPaddle);
-		break;
-	}
+	  case GameState::Waiting:
+	  {
+      // auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
+      // centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
+      // centerLine->setFillColor(sf::Color::White);
+      // _window->draw(*centerLine);
+      // _window->draw(*_playerPaddle);
+      // _window->draw(*_opponentPaddle);
+		  break;
+	  }
     default:
         break;
     }
-	
+
     _window->display();
 }

@@ -20,17 +20,22 @@ UI_MainMenu::UI_MainMenu(float width, float height, std::function<void()> onJoin
 	_title.setOrigin(_title.getGlobalBounds().getCenter());
 	_title.setPosition(sf::Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4));
 
-	_buttons.emplace_back(std::make_unique<Button>("Join", sf::Vector2f(2 * WINDOW_WIDTH / 3, WINDOW_HEIGHT / 2), onJoin));
-	_buttons.emplace_back(std::make_unique<Button>("Quit", sf::Vector2f(WINDOW_WIDTH / 2, 2 * WINDOW_HEIGHT / 3), onQuit));
+	_buttons.emplace_back(std::make_unique<Button>("Join", sf::Vector2f( WINDOW_WIDTH / 2, 3 * WINDOW_HEIGHT / 5), onJoin));
+	_buttons.emplace_back(std::make_unique<Button>("Quit", sf::Vector2f(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 7), onQuit));
 
-	_textField = std::make_unique<TextInputField>(sf::Vector2f( WINDOW_WIDTH / 3, WINDOW_HEIGHT / 2), sf::Vector2f(400, 30));
+	_textFields.emplace_back(std::make_unique<TextInputField>(sf::Vector2f( 4 * WINDOW_WIDTH / 9, WINDOW_HEIGHT / 2), sf::Vector2f(400, 30), "Server Address", AllowedCharacters::Alphanumeric));
+	_textFields.emplace_back(std::make_unique<TextInputField>(sf::Vector2f( 4 * WINDOW_WIDTH / 6, WINDOW_HEIGHT / 2), sf::Vector2f(100, 30), "Port", AllowedCharacters::Numbers));
+
 }
 
 void UI_MainMenu::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	InterfaceElement::draw(target, states);
 	target.draw(_title, states);
-	target.draw(*_textField, states);
+	for (const auto& textField : _textFields) {
+		target.draw(*textField, states);
+	}
+
 	for (const auto& button : _buttons) {
 		target.draw(*button, states);
 	}
@@ -38,7 +43,10 @@ void UI_MainMenu::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
 void UI_MainMenu::handleEvent(const sf::Event& event)
 {
-	_textField->handleEvent(event);
+	for (const auto& textField : _textFields) {
+		textField->handleEvent(event);
+	}
+
 
 	for (const auto& button : _buttons) {
 		button->handleEvent(event);
