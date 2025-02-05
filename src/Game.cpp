@@ -62,12 +62,12 @@ void Game::join()
 {	
 	if (!_winsockClient->initialize()) return;
 
-	if (!_winsockClient->connectToServer("127.0.0.1", "2222")) return;
+	if (!_winsockClient->connectToServer(_mainMenu->getIP() == "" ? "127.0.0.1" : _mainMenu->getIP(), "8888")) return;
 
-	if (_mainMenu->getIP() == "localhost") { // TODO: Connexion a l'ip
+	// if (_mainMenu->getIP() == "localhost") { // TODO: Connexion a l'ip
 		_winsockClient->sendData("CONNECT");
 		waitingGame();
-	}
+	// }
 }
 
 void Game::backToMenu()
@@ -177,7 +177,6 @@ void Game::checkForPlayers() {
 		if (command == "CONNECTED") {
 			std::string countStr;
 			std::getline(ss, countStr);
-			int playerCount = std::stoi(countStr);
 		}
 		else if (command == "PLAYERS_READY") {
 			startGame();
@@ -205,14 +204,15 @@ void Game::processServerMessages() {
 				values.push_back(std::stof(token));
 			}
 
+			std::cout << values.size() << std::endl;
 			if (values.size() >= 6) {
 				_ball->setPosition({values[0], values[1]});
 
 				_playerPaddle->setPosition({30.0f, values[2]});
-				_playerScore->setValue(static_cast<int>(values[3]));
+				_playerScore->update(static_cast<int>(values[3])); //ok
 
 				_opponentPaddle->setPosition({WINDOW_WIDTH - 30.0f, values[4]});
-				_opponentScore->setValue(static_cast<int>(values[5]));
+				_opponentScore->update(static_cast<int>(values[5])); //ok
 			}
 		}
 		catch (const std::exception& e) {
@@ -258,12 +258,7 @@ void Game::render() {
         break;
 	case GameState::Waiting:
 	{
-		// auto centerLine = std::make_unique<sf::RectangleShape>(sf::Vector2f(2.0f, WINDOW_HEIGHT));
-		// centerLine->setPosition({ static_cast<float>(WINDOW_WIDTH / 2), 0 });
-		// centerLine->setFillColor(sf::Color::White);
-		// _window->draw(*centerLine);
-		// _window->draw(*_playerPaddle);
-		// _window->draw(*_opponentPaddle);
+		// black window
 		break;
 	}
     default:

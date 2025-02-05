@@ -11,7 +11,7 @@ public:
     void increment();
     bool loadFont(const std::string &fontPath);
     void reset();
-    void setValue(int value) { _value = value; }
+    void update(int value);
 
 private:
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
