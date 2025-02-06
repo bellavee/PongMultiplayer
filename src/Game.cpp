@@ -199,6 +199,7 @@ void Game::checkForPlayers() {
 			std::cout << "Connected as player " << _playerId << std::endl;
 		} else if (type == "start") {
 			startGame();
+			std::cout << "Start game " << std::endl;
 		}
 
 	} catch (const json::exception& e) {

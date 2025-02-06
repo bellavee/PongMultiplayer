@@ -204,7 +204,7 @@ void Server::decodeClientMessages(const std::string& clientName, nlohmann::json 
 	if (messageContent["type"] == "connect")
 		newClientConnected(clientName, messageContent);
 	else if (messageContent["type"] == "input") {
-
+		handlePaddleInput(clientName, messageContent["content"]["direction"]);
 	}
 }
 
@@ -215,7 +215,7 @@ void Server::newClientConnected(const std::string& clientId, nlohmann::json mess
 	std::cout << "Client name: " + _clientsNamesList[clientId] + "connected" << std::endl;
 	if (_players.size() < 2) {
 		_players[id] = clientId; // _clientsMap[clientId];
-		std::cout << "player: " << id << "connected" << std::endl;
+		std::cout << "player: " << id << " connected" << std::endl;
 	}
 	json messJson = {
 		{"type", "connected"},
@@ -223,6 +223,34 @@ void Server::newClientConnected(const std::string& clientId, nlohmann::json mess
 	sendMessage(messJson.dump(), clientId);
 	if (_players.size() == 2)
 		startGame();
+}
+
+void Server::handlePaddleInput(const std::string& clientId, int direction) {
+	std::cout << "[Server] Input from: " << clientId << ", direction: " << direction << std::endl;
+
+	int playerId = 0;
+	for (const auto& [id, key] : _players) {
+		if (key == clientId) {
+			playerId = id;
+			break;
+		}
+	}
+
+	std::cout << "------ [Server] Processing input for Player " << playerId << "-------\n";
+
+	float newPos;
+	if (playerId == 1) {
+		newPos = _playerOnePaddle->getPosition().y + direction * PADDLE_SPEED * (1.0f/60.0f);
+		newPos = std::max(PADDLE_HEIGHT/2.0f, std::min(newPos, WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f));
+		_playerOnePaddle->setPosition({0, newPos});
+		std::cout << "[Server] Processing input for Player " << playerId << "\n";
+	}
+	else if (playerId == 2) {
+		newPos = _playerTwoPaddle->getPosition().y + direction * PADDLE_SPEED * (1.0f/60.0f);
+		newPos = std::max(PADDLE_HEIGHT/2.0f, std::min(newPos, WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f));
+		_playerTwoPaddle->setPosition({0, newPos});
+		std::cout << "[Server] Processing input for Player " << playerId << "\n";
+	}
 }
 
 void Server::startGame()
@@ -268,5 +296,37 @@ void Server::update(float deltatime)
 {
 	_ball->update(BALL_SPEED * deltatime);
 	updateGameState();
+
+	checkPaddleCollision(*_ball, *_playerOnePaddle, true);
+	checkPaddleCollision(*_ball, *_playerTwoPaddle, false);
 }
 
+void Server::checkPaddleCollision(Ball& ball, const Paddle& paddle, bool isLeftPaddle) {
+	auto ballPos = ball.getPosition();
+	auto paddlePos = paddle.getPosition();
+
+	float ballCenterX = ballPos.x + ball.getRadius();
+	float ballCenterY = ballPos.y + ball.getRadius();
+
+	if (isLeftPaddle) {
+		if (ballCenterX - ball.getRadius() <= paddlePos.x + PADDLE_WIDTH/2 &&
+			ballCenterX >= paddlePos.x - PADDLE_WIDTH/2) {
+			if (ballCenterY >= paddlePos.y - PADDLE_HEIGHT/2 && ballCenterY <= paddlePos.y + PADDLE_HEIGHT/2) {
+				ball.setPosition({paddlePos.x + PADDLE_WIDTH/2 + ball.getRadius() - (ballCenterX - ballPos.x), ballPos.y});
+				ball.reverseXVelocity();
+				float relativeIntersectY = (ballCenterY - paddlePos.y) / (PADDLE_HEIGHT/2);
+				ball.setVelocityY(relativeIntersectY * BALL_SPEED);
+			}
+		}
+	} else {
+		if (ballCenterX + ball.getRadius() >= paddlePos.x - PADDLE_WIDTH/2 &&
+			ballCenterX <= paddlePos.x + PADDLE_WIDTH/2) {
+			if (ballCenterY >= paddlePos.y - PADDLE_HEIGHT/2 && ballCenterY <= paddlePos.y + PADDLE_HEIGHT/2) {
+				ball.setPosition({paddlePos.x - PADDLE_WIDTH/2 - ball.getRadius() - (ballCenterX - ballPos.x), ballPos.y});
+				ball.reverseXVelocity();
+				float relativeIntersectY = (ballCenterY - paddlePos.y) / (PADDLE_HEIGHT/2);
+				ball.setVelocityY(relativeIntersectY * BALL_SPEED);
+			}
+		}
+	}
+}

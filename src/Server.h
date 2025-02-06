@@ -38,11 +38,16 @@ private:
 	void render();
 	void decodeClientMessages(const std::string& clientName, nlohmann::json messageContent);
 	void newClientConnected(const std::string& clientName, nlohmann::json messageContent);
+
+	void handlePaddleInput(const std::string &clientKey, int direction);
+
 	void startGame();
 	void sendMessageToAll(const std::string& mess);
 	void updateGameState();
 	void update(float deltatime);
-	 
+
+	void checkPaddleCollision(Ball &ball, const Paddle &paddle, bool isLeftPaddle);
+
 	ServerState _state;
 	SOCKET m_serverSocket;
 	bool m_isRunning;
