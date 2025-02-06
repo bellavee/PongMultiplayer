@@ -13,10 +13,11 @@ public:
 
 	virtual void handleEvent(const sf::Event& event) override;
 
+	std::function<void()> _callback;
+
 private:
 	sf::Font _font;
 	sf::Text _text;
-	std::function<void()> _callback;
 
 protected:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
