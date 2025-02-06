@@ -190,6 +190,8 @@ void Game::checkForPlayers() {
 	std::string messageStr = _winsockClient->receiveData();
 	if (messageStr.empty()) return;
 
+	std::cout << "[checkForPlayers] " << messageStr << std::endl;
+
 	try {
 		json message = json::parse(messageStr);
 		std::string type = message["type"];
@@ -197,6 +199,8 @@ void Game::checkForPlayers() {
 		if (type == "connected") {
 			_playerId = message["content"]["player_id"];
 			std::cout << "Connected as player " << _playerId << std::endl;
+		} else if (type == "start") {
+			startGame();
 		}
 
 	} catch (const json::exception& e) {
@@ -234,7 +238,7 @@ void Game::processServerMessages() {
 	if (messageStr.empty()) return;
 
 	// auto [command, data] = parseCommand(messageStr);
-	// std::cout << command << "-" << data << std::endl;
+	std::cout << messageStr << std::endl;
 
 	try {
 		json message = json::parse(messageStr);
