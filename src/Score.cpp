@@ -1,11 +1,11 @@
 ﻿
 #include "Score.h"
 
-Score::Score(float x, float y) : _text(_font), _value(0) {
-    _text.setCharacterSize(50);
+Score::Score(float x, float y) : _text(_font), _value(0), _playerName("") {
+    _text.setCharacterSize(45);
     _text.setFillColor(sf::Color::White);
     _text.setPosition({x, y});
-    _text.setString("0");
+    _text.setString(_playerName + ": " + "0");
 }
 
 void Score::increment() {
@@ -28,11 +28,10 @@ bool Score::loadFont(const std::string& fontPath) {
 void Score::reset()
 {
     _value = 0;
-	_text.setString(std::to_string(_value));
-
+	_text.setString(_playerName + ": " + std::to_string(_value));
 }
 
 void Score::update(int value) {
     _value = value;
-    _text.setString(std::to_string(_value));
+    _text.setString(_playerName + ": " + std::to_string(_value));
 }

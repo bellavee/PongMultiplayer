@@ -258,8 +258,11 @@ void Server::startGame()
 	_state = ServerState::GAME_STARTED;
 	json messJson = {
 		{"type", "start"},
-		{"content" , {{ {{"player1_name", _clientsNamesList[_players[1]]}},
-		{{"player2_name", _clientsNamesList[_players[2]]}}}} } };
+		{"content", {
+			{"player1_name", _clientsNamesList[_players[1]]},
+			{"player2_name", _clientsNamesList[_players[2]]}
+		}}
+	};
 	sendMessageToAll(messJson.dump());
 	updateGameState();
 }
@@ -280,8 +283,8 @@ void Server::updateGameState()
 			{"y", _ball->getPosition().y}
 		}},
 		{"paddles", {
-			{"1", {{"y", _playerOnePaddle->getPosition().y}}},
-			{"2", {{"y", _playerTwoPaddle->getPosition().y}}}
+			{ "1", {{"x", _playerOnePaddle->getPosition().x}, {"y", _playerOnePaddle->getPosition().y}}},
+			{"2", {{"x", _playerTwoPaddle->getPosition().x}, {"y", _playerTwoPaddle->getPosition().y}}}
 		}},
 		{"score", {
 			{"1", _playerOneScore},

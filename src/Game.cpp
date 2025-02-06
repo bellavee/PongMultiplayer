@@ -11,22 +11,25 @@ Game::Game() {
     );
     _window->setFramerateLimit(60);
 
-    _playerPaddle = std::make_unique<Paddle>(30.0f, WINDOW_HEIGHT / 2);
-    _opponentPaddle = std::make_unique<Paddle>(WINDOW_WIDTH - 30.0f, WINDOW_HEIGHT / 2);
+    _player1Paddle = std::make_unique<Paddle>(30.0f, WINDOW_HEIGHT / 2);
+    _player2Paddle = std::make_unique<Paddle>(WINDOW_WIDTH - 30.0f, WINDOW_HEIGHT / 2);
     _ball = std::make_unique<Ball>(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
-    _playerScore = std::make_unique<Score>(WINDOW_WIDTH / 4, 50.0f);
-    _opponentScore = std::make_unique<Score>(3 * WINDOW_WIDTH / 4, 50.0f);
+    _player1Score = std::make_unique<Score>(WINDOW_WIDTH / 5, 50.0f);
+    _player2Score = std::make_unique<Score>(3 * WINDOW_WIDTH / 5, 50.0f);
 
 	_mainMenu = std::make_unique<UI_MainMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { join(); }, [this]() { quit(); });
 	_pauseMenu = std::make_unique<UI_PauseMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { resumeGame(); }, [this]() { backToMenu(); });
     _lostConnectionPopup = std::make_unique<UI_LostConnection>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { backToMenu(); });
 
-    _playerPaddle->setColor(sf::Color(66, 135, 245)); // blue
-    _opponentPaddle->setColor(sf::Color(245, 66, 66)); // red
+    _player1Paddle->setColor(sf::Color(66, 135, 245)); // blue
+    _player2Paddle->setColor(sf::Color(245, 66, 66)); // red
     _ball->setColor(sf::Color(245, 197, 66)); // yellow
 
-    if (!_playerScore->loadFont(BASE_FONT_PATH) ||
-       !_opponentScore->loadFont(BASE_FONT_PATH)) {
+	_player1Score->setPlayerName("Player1");
+	_player2Score->setPlayerName("Player2");
+
+    if (!_player1Score->loadFont(BASE_FONT_PATH) ||
+       !_player2Score->loadFont(BASE_FONT_PATH)) {
         throw std::runtime_error("Failed to load font file");
     }
 
@@ -80,8 +83,8 @@ void Game::backToMenu()
 {
     _state = GameState::MainMenu;
 
-	_playerScore->reset();
-	_opponentScore->reset();
+	_player1Score->reset();
+	_player2Score->reset();
 	resetBall();
 }
 
@@ -146,11 +149,11 @@ void Game::update(float deltaTime) {
 	// for debug
 	_predictedPaddleY = std::max(PADDLE_HEIGHT/2.0f, std::min(_predictedPaddleY, static_cast<float>(WINDOW_HEIGHT) - PADDLE_HEIGHT/2.0f));
 
-	if (_playerId == 1) {
+	/*if (_playerId == 1) {
 		_playerPaddle->setPosition({30.0f, _predictedPaddleY});
 	} else {
 		_playerPaddle->setPosition({WINDOW_WIDTH - 30.0f, _predictedPaddleY});
-	}
+	}*/
 
 	if (direction != _lastDirection) {
 		sendPlayerData(direction);
@@ -160,24 +163,24 @@ void Game::update(float deltaTime) {
 }
 
 void Game::handleCollisions() { // not use here
-    if (_ball->getPosition().y <= 0 ||
-        _ball->getPosition().y + _ball->getRadius() >= WINDOW_HEIGHT) {
-        _ball->reverseYVelocity();
-    }
+    //if (_ball->getPosition().y <= 0 ||
+    //    _ball->getPosition().y + _ball->getRadius() >= WINDOW_HEIGHT) {
+    //    _ball->reverseYVelocity();
+    //}
 
-    if (_ball->getGlobalBounds().findIntersection(_playerPaddle->getGlobalBounds()) ||
-        _ball->getGlobalBounds().findIntersection(_opponentPaddle->getGlobalBounds())) {
-        _ball->reverseXVelocity();
-    }
+    //if (_ball->getGlobalBounds().findIntersection(_playerPaddle->getGlobalBounds()) ||
+    //    _ball->getGlobalBounds().findIntersection(_opponentPaddle->getGlobalBounds())) {
+    //    _ball->reverseXVelocity();
+    //}
 
-    if (_ball->getPosition().x <= 0) {
-        _opponentScore->increment();
-        resetBall();
-    }
-    else if (_ball->getPosition().x + _ball->getRadius() >= WINDOW_WIDTH) {
-        _playerScore->increment();
-        resetBall();
-    }
+    //if (_ball->getPosition().x <= 0) {
+    //    _opponentScore->increment();
+    //    resetBall();
+    //}
+    //else if (_ball->getPosition().x + _ball->getRadius() >= WINDOW_WIDTH) {
+    //    _playerScore->increment();
+    //    resetBall();
+    //}
 }
 
 void Game::resetBall() {
@@ -198,6 +201,8 @@ void Game::checkForPlayers() {
 			_playerId = message["content"]["player_id"];
 			std::cout << "Connected as player " << _playerId << std::endl;
 		} else if (type == "start") {
+			_player1Score->setPlayerName(message["content"]["player1_name"]);
+			_player2Score->setPlayerName(message["content"]["player2_name"]);
 			startGame();
 			std::cout << "Start game " << std::endl;
 		}
@@ -229,8 +234,21 @@ void Game::processServerMessages() {
 			// Paddle
             auto& paddles = message["content"]["paddles"];
             for (const auto& [playerId, paddleData] : paddles.items()) {
-                float paddleY = paddleData["y"];
-                if (std::stoi(playerId) == 1) {
+				float paddleY = paddleData["y"];
+				float paddleX = paddleData["x"];
+
+				switch (std::stoi(playerId))
+				{
+				case 1:
+					_player1Paddle->setPosition(sf::Vector2f(paddleX, paddleY));
+					break;
+				case 2:
+					_player2Paddle->setPosition(sf::Vector2f(paddleX, paddleY));
+					break;
+				default:
+					break;
+				}
+				/*if (std::stoi(playerId) == 1) {
                     if (_playerId == 1) {
                         float currentY = _playerPaddle->getPosition().y;
                         if (std::abs(paddleY - currentY) > 10.0f) {
@@ -249,26 +267,27 @@ void Game::processServerMessages() {
                     } else {
                         _opponentPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
                     }
-                } // to do handle id = 3 case
+                } */// to do handle id = 3 case
             }
 
 			// Score
             auto& scores = message["content"]["score"];
             for (const auto& [playerId, score] : scores.items()) {
-                if (std::stoi(playerId) == _playerId) {
-                    _playerScore->update(score);
-                } else {
-                    _opponentScore->update(score);
-                }
+				if (std::stoi(playerId) == 1) {
+					_player1Score->update(score);
+				}
+				else if (std::stoi(playerId) == 2) {
+					_player2Score->update(score);
+				}
             }
         }
         else if (type == "score") {
             auto& newScores = message["content"]["new_score"];
             for (const auto& [playerId, score] : newScores.items()) {
-                if (std::stoi(playerId) == _playerId) {
-                    _playerScore->update(score);
-                } else {
-                    _opponentScore->update(score);
+                if (std::stoi(playerId) == 1) {
+                    _player1Score->update(score);
+                } else if (std::stoi(playerId) == 2) {
+                    _player2Score->update(score);
                 }
             }
         }
@@ -306,11 +325,11 @@ void Game::render() {
 		centerLine->setFillColor(sf::Color::White);
 		_window->draw(*centerLine);
 
-		_window->draw(*_playerPaddle);
-		_window->draw(*_opponentPaddle);
+		_window->draw(*_player1Paddle);
+		_window->draw(*_player2Paddle);
 		_window->draw(*_ball);
-		_window->draw(*_playerScore);
-		_window->draw(*_opponentScore);
+		_window->draw(*_player1Score);
+		_window->draw(*_player2Score);
 	}
 
     switch (_state)
