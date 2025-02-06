@@ -1,8 +1,10 @@
 #include "TextInputField.h"
 #include "resources.h"
 
-TextInputField::TextInputField(sf::Vector2f pos, sf::Vector2f size, const std::string& displayText, AllowedCharacters allowedchars) : _text(_font), _userText(_font), _position(pos), _isActive(false), _allowedChars(allowedchars)
+#include <SFML/Window/Export.hpp>
 
+TextInputField::TextInputField(sf::Vector2f pos, sf::Vector2f size, const std::string& displayText, AllowedCharacters allowedchars, int maxChars) 
+	: _text(_font), _userText(_font), _position(pos), _isActive(false), _allowedChars(allowedchars), _maxChars(maxChars)
 {
 	_shape.setSize(size);
 	_shape.setFillColor(sf::Color::Black);
@@ -47,52 +49,76 @@ void TextInputField::handleEvent(const sf::Event& event)
 			_isActive = _shape.getGlobalBounds().contains(mousePos);			
 
 		}
+		return;
 	}
-	else
+
+	if (!_isActive)
+		return;
+
+	
+	if (const auto* textEvent = event.getIf<sf::Event::TextEntered>())
 	{
-		if (_isActive && event.is<sf::Event::TextEntered>())
+		if (textEvent->unicode == 8 && !_userText.getString().isEmpty()) // Backspace
 		{
-			if (const auto* textEvent = event.getIf<sf::Event::TextEntered>())
+			sf::String str = _userText.getString();
+			str.erase(str.getSize() - 1);
+			_userText.setString(str);
+		}
+		else if (textEvent->unicode >= 32 && textEvent->unicode <= 126)
+		{
+			// Limite le nombre de caractères à la taille de la forme
+			if (_userText.getLocalBounds().size.x >= _shape.getSize().x - 20)
+				return;
+
+			if (_userText.getString().getSize() >= _maxChars)
+				return;
+
+			if (!isCharacterAllowed(textEvent->unicode))
+				return;
+
+			_userText.setString(_userText.getString() + static_cast<char>(textEvent->unicode));
+		}
+	}	
+	else if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
+	{
+		// Utilisation de Ctrl + V pour coller une chaîne de caractères nettoyée
+		if (keyPressed->control && keyPressed->code == sf::Keyboard::Key::V)
+		{
+			sf::String clipboardText = sf::Clipboard::getString();
+			sf::String filteredText = _userText.getString();
+
+			for (auto unicode : clipboardText)
 			{
-				if (textEvent->unicode == 8 && !_userText.getString().isEmpty()) // Backspace
+				if (isCharacterAllowed(unicode))
 				{
-					sf::String str = _userText.getString();
-					str.erase(str.getSize() - 1);
-					_userText.setString(str);
+					if (filteredText.getSize() >= _maxChars)
+						break;
+					filteredText += static_cast<char>(unicode);
 				}
-				else if (textEvent->unicode >= 32 && textEvent->unicode <= 126) 
-				{
-
-					//limit the number of characters to the size of the shape size
-					if (_userText.getLocalBounds().size.x >= _shape.getSize().x - 20)
-						return;
-
-					switch (_allowedChars)
-					{
-					case AllowedCharacters::Numbers:
-						if ((textEvent->unicode < 48 || textEvent->unicode > 57) && textEvent->unicode != 46)
-							return;
-						break;
-					case AllowedCharacters::Letters:
-						if ((textEvent->unicode < 65 || textEvent->unicode > 90) && (textEvent->unicode < 97 || textEvent->unicode > 122))
-							return;
-						break;
-					case AllowedCharacters::Alphanumeric:
-						if ((textEvent->unicode < 48 || textEvent->unicode > 57) && (textEvent->unicode < 65 || textEvent->unicode > 90) && (textEvent->unicode < 97 || textEvent->unicode > 122) && textEvent->unicode != 46)
-							return;
-						break;
-					default:
-							break;
-					}
-					_userText.setString(_userText.getString() + static_cast<char>(textEvent->unicode));
-				}
-				sf::FloatRect userTextBounds = _userText.getLocalBounds();
-				_userText.setOrigin({ userTextBounds.position + userTextBounds.size / 2.f });
-				_userText.setPosition(_shape.getPosition());
 			}
+			_userText.setString(filteredText);
 		}
 	}
-	
+
+	sf::FloatRect userTextBounds = _userText.getLocalBounds();
+	_userText.setOrigin({ userTextBounds.position + userTextBounds.size / 2.f });
+	_userText.setPosition(_shape.getPosition());
+}
+
+
+bool TextInputField::isCharacterAllowed(char32_t unicode)
+{
+	switch (_allowedChars)
+	{
+	case AllowedCharacters::Numbers:
+		return (unicode >= 48 && unicode <= 57) || unicode == 46;
+	case AllowedCharacters::Letters:
+		return (unicode >= 65 && unicode <= 90) || (unicode >= 97 && unicode <= 122);
+	case AllowedCharacters::Alphanumeric:
+		return (unicode >= 48 && unicode <= 57) || (unicode >= 65 && unicode <= 90) || (unicode >= 97 && unicode <= 122) || unicode == 46;
+	default:
+		return false;
+	}
 }
 
 
