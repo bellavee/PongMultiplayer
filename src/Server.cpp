@@ -36,6 +36,9 @@ void Server::Launch(const std::string& ipAddress, int port)
 		std::cout << "Bind failed with error code : " + WSAGetLastError() << std::endl;
 		return;
 	}
+	u_long mode = 1;
+	ioctlsocket(m_serverSocket, FIONBIO, &mode);
+
 	m_isRunning = true;
 	_serverRunning->setContent("Server running at " + ipAddress + " at port " + std::to_string(port));
 	_state = ServerState::RUNNING;
@@ -46,6 +49,7 @@ void Server::Run()
 	std::cout << "Fran " << std::endl;
 	while (_window->isOpen()) {
 		processEvents();
+		render();
 		switch (_state)
 		{
 		case ServerState::NOT_RUNNING:
@@ -59,8 +63,6 @@ void Server::Run()
 		default:
 			break;
 		}
-		render();
-
 	}
 }
 
@@ -84,11 +86,12 @@ void Server::readMessage()
 	int len = sizeof(client);
 	std::string recvbuf(512, '\0');
 
-	std::cout << "Waiting for data...\n";
 	int recv_len = recvfrom(m_serverSocket, &recvbuf[0], 512, 0, (struct sockaddr*)&client, &len);
-
 	if (recv_len == SOCKET_ERROR) {
-		std::cerr << "ReadMessage failed: " << WSAGetLastError() << std::endl;
+		int err = WSAGetLastError();
+		if (err == WSAEWOULDBLOCK) // No data available
+			return;
+		std::cerr << "ReadMessage failed: " << err << std::endl;
 		return;
 	}
 	recvbuf.resize(recv_len);

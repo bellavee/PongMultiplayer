@@ -65,7 +65,7 @@ void Game::join()
 
 	if (!_winsockClient->connectToServer(_mainMenu->getIP(), _mainMenu->getPort())) return;
 
-	json messageJson = {{"type", "CONNECTION"}};
+	json messageJson = {{"type", "CONNECT"}, {"typse", "CONNECT"}, {"typee", "CONNECT"}, {"taype", "CONNECT"}, {"typae", "CONNECT"}, };
 	_winsockClient->sendData(messageJson.dump());
 	waitingGame();
 }
