@@ -21,7 +21,7 @@ public:
 
 	std::string getIP() const { return _textFields[0]->getText(); }
 	std::string getPort() const { return _textFields[1]->getText(); }
-
+	std::string getClientName() const { return _textFields[2]->getText(); }
 
 private:
 	sf::Text _title;
