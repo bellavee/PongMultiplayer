@@ -14,6 +14,7 @@ Server::Server()
 	, _ball(std::make_unique<Ball>(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
 	, _playerOneScore(0)
 	, _playerTwoScore(0)
+	, _playerSpeed(10)
 {
 }
 
@@ -204,7 +205,7 @@ void Server::decodeClientMessages(const std::string& clientName, nlohmann::json 
 	if (messageContent["type"] == "connect")
 		newClientConnected(clientName, messageContent);
 	else if (messageContent["type"] == "input") {
-
+		clientIsMoving(clientName, messageContent);
 	}
 }
 
@@ -223,6 +224,18 @@ void Server::newClientConnected(const std::string& clientId, nlohmann::json mess
 	sendMessage(messJson.dump(), clientId);
 	if (_players.size() == 2)
 		startGame();
+}
+
+void Server::clientIsMoving(const std::string& clientName, nlohmann::json messageContent)
+{
+	int dir = messageContent["content"]["direction"];
+	if (_players[1] == clientName) {
+		sf::Vector2f newPos = _playerOnePaddle->getPosition() + (sf::Vector2f{ 0, 1 } * (_playerSpeed * dir));
+		_playerOnePaddle->setPosition(newPos);
+	} else if (_players[2] == clientName) {
+		sf::Vector2f newPos = _playerTwoPaddle->getPosition() + (sf::Vector2f{ 0, 1 } *(_playerSpeed * dir));
+		_playerTwoPaddle->setPosition(newPos);
+	}
 }
 
 void Server::startGame()

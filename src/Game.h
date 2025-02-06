@@ -65,10 +65,10 @@ private:
 
     GameState _state = GameState::MainMenu;
 
-    int _lastDirection = 0;
+  //  int _lastDirection = 0;
     int _playerId = 0;
-    int _paddleSpeed = 0;
-    float _predictedPaddleY = WINDOW_HEIGHT / 2;
+   // int _paddleSpeed = 0;
+ //   float _predictedPaddleY = WINDOW_HEIGHT / 2;
 };
 
 

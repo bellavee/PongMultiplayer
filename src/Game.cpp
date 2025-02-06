@@ -110,25 +110,30 @@ void Game::processEvents() {
 			break;
 		}
 		
-        if (event->is<sf::Event::KeyPressed>() && isKeyPressed(sf::Keyboard::Key::Escape))
+       /* if (event->is<sf::Event::KeyPressed>() && isKeyPressed(sf::Keyboard::Key::Escape))
         {
 			if (_state == GameState::Playing)
 				_state = GameState::Paused;
 			else if (_state == GameState::Paused)
 				_state = GameState::Playing;
-        }
+        }*/
 
 		if (event->is<sf::Event::KeyPressed>())
 		{
+			if ((isKeyPressed(sf::Keyboard::Key::Up) || isKeyPressed(sf::Keyboard::Key::Z)) && _state == GameState::Playing) {
+				sendPlayerData(-1);
+			} else if ((isKeyPressed(sf::Keyboard::Key::Down) || isKeyPressed(sf::Keyboard::Key::S)) && _state == GameState::Playing) {
+				sendPlayerData(1);
+			}
 			//simulate Lost Connection with L Key
-			if (isKeyPressed(sf::Keyboard::Key::L))
-				if (_state == GameState::Playing)
-					_state = GameState::LostConnection;
+			//if (isKeyPressed(sf::Keyboard::Key::L))
+			//	if (_state == GameState::Playing)
+			//		_state = GameState::LostConnection;
 
-			//simulate reconnection with R Key
-            if (isKeyPressed(sf::Keyboard::Key::R))
-			    if (_state == GameState::LostConnection)
-				    _state = GameState::Playing;
+			////simulate reconnection with R Key
+   //         if (isKeyPressed(sf::Keyboard::Key::R))
+			//    if (_state == GameState::LostConnection)
+			//	    _state = GameState::Playing;
 		}
         
     }
@@ -137,28 +142,28 @@ void Game::processEvents() {
 void Game::update(float deltaTime) {
 	if (_state != GameState::Playing) return;
 
-	int direction = 0;
-	if (isKeyPressed(sf::Keyboard::Key::W) || isKeyPressed(sf::Keyboard::Key::Z)) {
-		direction = -1;
-		_predictedPaddleY -= _paddleSpeed * deltaTime;
-	} else if (isKeyPressed(sf::Keyboard::Key::S)) {
-		direction = 1;
-		_predictedPaddleY += _paddleSpeed * deltaTime;
-	}
+	//int direction = 0;
+	//if (isKeyPressed(sf::Keyboard::Key::W) || isKeyPressed(sf::Keyboard::Key::Z)) {
+	//	direction = -1;
+	//	_predictedPaddleY -= _paddleSpeed * deltaTime;
+	//} else if (isKeyPressed(sf::Keyboard::Key::S)) {
+	//	direction = 1;
+	//	_predictedPaddleY += _paddleSpeed * deltaTime;
+	//}
 
-	// for debug
-	_predictedPaddleY = std::max(PADDLE_HEIGHT/2.0f, std::min(_predictedPaddleY, static_cast<float>(WINDOW_HEIGHT) - PADDLE_HEIGHT/2.0f));
+	//// for debug
+	//_predictedPaddleY = std::max(PADDLE_HEIGHT/2.0f, std::min(_predictedPaddleY, static_cast<float>(WINDOW_HEIGHT) - PADDLE_HEIGHT/2.0f));
 
-	/*if (_playerId == 1) {
-		_playerPaddle->setPosition({30.0f, _predictedPaddleY});
-	} else {
-		_playerPaddle->setPosition({WINDOW_WIDTH - 30.0f, _predictedPaddleY});
-	}*/
+	///*if (_playerId == 1) {
+	//	_playerPaddle->setPosition({30.0f, _predictedPaddleY});
+	//} else {
+	//	_playerPaddle->setPosition({WINDOW_WIDTH - 30.0f, _predictedPaddleY});
+	//}*/
 
-	if (direction != _lastDirection) {
-		sendPlayerData(direction);
-		_lastDirection = direction;
-	}
+	//if (direction != _lastDirection) {
+	//	sendPlayerData(direction);
+	//	_lastDirection = direction;
+	//}
 	processServerMessages();
 }
 

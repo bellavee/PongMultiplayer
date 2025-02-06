@@ -68,7 +68,6 @@ bool WinsockClient::connectToServer(const std::string& serverAddress, const std:
 bool WinsockClient::sendData(const std::string& data) {
     std::string cpy = data;
     cpy.push_back('\0');
-    std::cout << "Message sent : " + cpy << std::endl;
     int iResult = send(_connectSocket, cpy.c_str(), static_cast<int>(cpy.length()), 0);
     if (iResult == SOCKET_ERROR) {
         logError("send failed");
