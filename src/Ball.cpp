@@ -14,6 +14,24 @@ Ball::~Ball() {
 
 void Ball::update(float deltaTime) {
     move(_velocity * deltaTime);
+
+    auto position = getPosition();
+
+    if (position.y <= 0) {
+        setPosition({position.x, 0});
+        reverseYVelocity();
+    } else if (position.y + BALL_RADIUS * 2 >= WINDOW_HEIGHT) {
+        setPosition({position.x, WINDOW_HEIGHT - BALL_RADIUS * 2});
+        reverseYVelocity();
+    }
+
+    if (position.x <= 0) {
+        setPosition({0, position.y});
+        reverseXVelocity();
+    } else if (position.x + BALL_RADIUS * 2 >= WINDOW_WIDTH) {
+        setPosition({WINDOW_WIDTH - BALL_RADIUS * 2, position.y});
+        reverseXVelocity();
+    }
 }
 
 void Ball::reset(float x, float y) {
