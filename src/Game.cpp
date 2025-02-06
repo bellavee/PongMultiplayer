@@ -191,7 +191,7 @@ void Game::checkForPlayers() {
 	if (messageStr.empty()) return;
 
 	try {
-		json message = json::parse(message);
+		json message = json::parse(messageStr);
 		std::string type = message["type"];
 
 		if (type == "connected") {
@@ -237,7 +237,7 @@ void Game::processServerMessages() {
 	// std::cout << command << "-" << data << std::endl;
 
 	try {
-		json message = json::parse(message);
+		json message = json::parse(messageStr);
 		std::string type = message["type"];
 
 		if (type == "update") {
