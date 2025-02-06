@@ -50,11 +50,17 @@ add_executable(Server src/mainServer.cpp
         src/UI_ServerMenu.cpp
         src/resources.h
         src/TextInputField.cpp
-	    src/TextInputField.cpp
+	src/TextInputField.cpp
         src/Button.cpp
         src/Button.h
         src/UI_ServerRunning.h
         src/UI_ServerRunning.cpp
+        src/Ball.cpp
+        src/Ball.h
+        src/Entity.cpp
+        src/Entity.h
+        src/Paddle.cpp
+        src/Paddle.h
 )
 
 include(FetchContent)

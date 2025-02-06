@@ -7,13 +7,16 @@
 #include <SFML/Graphics.hpp>
 #include "UI_ServerMenu.h"
 #include "UI_ServerRunning.h"
+#include "Paddle.h"
+#include "Ball.h"
 
 #pragma comment(lib,"ws2_32.lib")
 
 enum class ServerState {
 	NOT_RUNNING,
 	RUNNING,
-	CLOSED
+	GAME_STARTED,
+	CLOSED,
 };
 
 
@@ -28,18 +31,35 @@ public:
 	void Connect();
 private:
 	void readMessage();
-	void sendMessage(const std::string& message, struct sockaddr_in& client);
+	void sendMessage(const std::string& message, const std::string& clientId);
 	void initWinsok();
 	void initWindow();
 	void processEvents();
 	void render();
-
+	void decodeClientMessages(const std::string& clientName, nlohmann::json messageContent);
+	void newClientConnected(const std::string& clientName, nlohmann::json messageContent);
+	void startGame();
+	void sendMessageToAll(const std::string& mess);
+	void updateGameState();
+	void update(float deltatime);
+	 
 	ServerState _state;
 	SOCKET m_serverSocket;
 	bool m_isRunning;
 	std::unique_ptr<sf::RenderWindow> _window;
 	std::unique_ptr<UI_ServerMenu> _serverMenu;
 	std::unique_ptr<UI_ServerRunning> _serverRunning;
+	std::unordered_map<std::string, sockaddr_in> _clientsMap;
+	std::unordered_map<int, std::string> _players;
+	std::vector<std::string> _clientsList;
+	std::unordered_map<std::string, std::string> _clientsNamesList;
+	std::unordered_map<std::string, std::string> _messageBuffer;
+
+	std::unique_ptr<Paddle> _playerOnePaddle;
+	std::unique_ptr<Paddle> _playerTwoPaddle;
+	std::unique_ptr<Ball> _ball;
+	int _playerOneScore;
+	int _playerTwoScore;
 };
 
 #endif
