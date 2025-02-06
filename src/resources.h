@@ -17,4 +17,4 @@ const float PADDLE_SPEED = 400.0f;
 
 // Ball
 const float BALL_RADIUS = 20.0f;
-const float BALL_SPEED = 50.f;
+const float BALL_SPEED = 25.f;

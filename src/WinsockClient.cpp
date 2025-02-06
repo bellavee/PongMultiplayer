@@ -44,6 +44,8 @@ bool WinsockClient::connectToServer(const std::string& serverAddress, const std:
             logError("Error creating socket");
             return false;
         }
+        u_long mode = 1;
+        ioctlsocket(_connectSocket, FIONBIO, &mode);
 
         iResult = connect(_connectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
         if (iResult == SOCKET_ERROR) {
@@ -82,6 +84,9 @@ std::string WinsockClient::receiveData() {
 
     if (iResult > 0) {
         return std::string(recvbuf, iResult);
+    }
+    if (WSAGetLastError() == WSAEWOULDBLOCK) {
+        return "";
     }
     if (iResult == 0) {
         std::cerr << "Connection closed by server" << std::endl;

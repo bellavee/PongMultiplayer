@@ -14,7 +14,7 @@ Server::Server()
 	, _ball(std::make_unique<Ball>(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
 	, _playerOneScore(0)
 	, _playerTwoScore(0)
-	, _playerSpeed(10)
+	, _playerSpeed(15)
 {
 }
 
