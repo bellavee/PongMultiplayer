@@ -22,7 +22,7 @@ public:
 	
 	virtual void handleEvent(const sf::Event& event) override;
 
-	void setActive(bool active) { _isActive = active; }
+	void setActive(bool active);
 	bool isActive() const { return _isActive; }
 
 private:

@@ -46,13 +46,13 @@ void TextInputField::handleEvent(const sf::Event& event)
 		if (mouseEvent->button == sf::Mouse::Button::Left)
 		{
 			sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x), static_cast<float>(mouseEvent->position.y));
-			_isActive = _shape.getGlobalBounds().contains(mousePos);			
+			setActive(_shape.getGlobalBounds().contains(mousePos));
 
 		}
 		return;
 	}
 
-	if (!_isActive)
+	if (!isActive())
 		return;
 
 	
@@ -105,6 +105,19 @@ void TextInputField::handleEvent(const sf::Event& event)
 	_userText.setPosition(_shape.getPosition());
 }
 
+
+void TextInputField::setActive(bool active)
+{
+	_isActive = active;
+	if (_isActive)
+	{
+		_shape.setOutlineColor(sf::Color(255, 255, 255, 150));
+	}
+	else
+	{
+		_shape.setOutlineColor(sf::Color::White);
+	}
+}
 
 bool TextInputField::isCharacterAllowed(char32_t unicode)
 {
