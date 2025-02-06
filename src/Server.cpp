@@ -84,9 +84,9 @@ void Server::readMessage()
 {
 	struct sockaddr_in client;
 	int len = sizeof(client);
-	std::string recvbuf(512, '\0');
+	char recvbuf[512];
 
-	int recv_len = recvfrom(m_serverSocket, &recvbuf[0], 512, 0, (struct sockaddr*)&client, &len);
+	int recv_len = recvfrom(m_serverSocket, recvbuf, 512, 0, (struct sockaddr*)&client, &len);
 	if (recv_len == SOCKET_ERROR) {
 		int err = WSAGetLastError();
 		if (err == WSAEWOULDBLOCK) // No data available
@@ -94,10 +94,26 @@ void Server::readMessage()
 		std::cerr << "ReadMessage failed: " << err << std::endl;
 		return;
 	}
-	recvbuf.resize(recv_len);
-	json recvbufJson = json::parse(recvbuf);
-	std::cout << "Data: " << recvbufJson.dump(4) << std::endl;
-	/*to rmv */ sendMessage("Well received", client);
+
+	std::string clientKey = std::to_string(client.sin_addr.s_addr) + ":" + std::to_string(client.sin_port);
+	if (_messageBuffer.find(clientKey) == _messageBuffer.end())
+		_messageBuffer[clientKey] = std::string(recvbuf, recv_len);
+	else
+		_messageBuffer[clientKey] += std::string(recvbuf, recv_len);
+
+	if (!_messageBuffer[clientKey].empty() && _messageBuffer[clientKey].back() == '\0') {
+		json recvbufJson;
+		try {
+			recvbufJson = json::parse(_messageBuffer[clientKey]);
+		} catch (const json::parse_error& e) {
+			std::cerr << "JSON Parse Error: " << e.what() << std::endl;
+			_messageBuffer[clientKey].clear();
+			return;
+		}
+		std::cout << "Data received: from" + clientKey + " :" << recvbufJson.dump(4) << std::endl;
+		sendMessage("Well received", client);
+		_messageBuffer[clientKey].clear();
+	}
 }
 
 void Server::sendMessage(const std::string& message, struct sockaddr_in & client)

@@ -40,6 +40,7 @@ private:
 	std::unique_ptr<sf::RenderWindow> _window;
 	std::unique_ptr<UI_ServerMenu> _serverMenu;
 	std::unique_ptr<UI_ServerRunning> _serverRunning;
+	std::unordered_map<std::string, std::string> _messageBuffer;
 };
 
 #endif
