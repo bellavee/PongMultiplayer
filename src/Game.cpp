@@ -65,8 +65,14 @@ void Game::join()
 
 	if (!_winsockClient->connectToServer(_mainMenu->getIP(), _mainMenu->getPort())) return;
 
-	json messageJson = {{"type", "CONNECTION"}};
-	_winsockClient->sendData(messageJson.dump());
+	json message = {
+		{"type", "connect"},
+		{"content", {
+	            {"player_name", "Player"} // placeholder
+		}}
+	};
+
+	_winsockClient->sendData(message.dump());
 	waitingGame();
 }
 
@@ -179,102 +185,191 @@ void Game::resetBall() {
 }
 
 void Game::checkForPlayers() {
-	std::string message = _winsockClient->receiveData();
-	if (!message.empty()) {
-		auto [command, data] = parseCommand(message);
+	if (!_winsockClient || !_winsockClient->isConnected()) return;
 
-		if (command == "CONNECTED") { // ex: CONNECT:1 -> playerId=1
-			auto tokens = splitMessage(data);
-			if (!tokens.empty()) {
-				_playerId = std::stoi(tokens[0]);
-				std::cout << "Connected as player " << _playerId << std::endl;
-			}
+	std::string messageStr = _winsockClient->receiveData();
+	if (messageStr.empty()) return;
+
+	try {
+		json message = json::parse(message);
+		std::string type = message["type"];
+
+		if (type == "connected") {
+			_playerId = message["content"]["player_id"];
+			std::cout << "Connected as player " << _playerId << std::endl;
 		}
-		else if (command == "PLAYERS_READY") { // ex: PLAYERS_READY:400
-			auto tokens = splitMessage(data);
-			if (!tokens.empty()) {
-				_paddleSpeed = std::stoi(tokens[0]);
-				std::cout << "Paddle speed " << _paddleSpeed << std::endl;
-			}
-			startGame();
-		}
+
+	} catch (const json::exception& e) {
+		std::cerr << "JSON parsing error: " << e.what() << std::endl;
+	} catch (const std::exception& e) {
+		std::cerr << "Error processing message: " << e.what() << std::endl;
 	}
+
+	// std::string message = _winsockClient->receiveData();
+	// if (!message.empty()) {
+	// 	auto [command, data] = parseCommand(message);
+	//
+	// 	if (command == "CONNECTED") { // ex: CONNECT:1 -> playerId=1
+	// 		auto tokens = splitMessage(data);
+	// 		if (!tokens.empty()) {
+	// 			_playerId = std::stoi(tokens[0]);
+	// 			std::cout << "Connected as player " << _playerId << std::endl;
+	// 		}
+	// 	}
+	// 	else if (command == "PLAYERS_READY") { // ex: PLAYERS_READY:400
+	// 		auto tokens = splitMessage(data);
+	// 		if (!tokens.empty()) {
+	// 			_paddleSpeed = std::stoi(tokens[0]);
+	// 			std::cout << "Paddle speed " << _paddleSpeed << std::endl;
+	// 		}
+	// 		startGame();
+	// 	}
+	// }
 }
 
 void Game::processServerMessages() {
 	if (!_winsockClient || !_winsockClient->isConnected()) return;
 
-	std::string message = _winsockClient->receiveData();
-	if (message.empty()) return;
+	std::string messageStr = _winsockClient->receiveData();
+	if (messageStr.empty()) return;
 
-	auto [command, data] = parseCommand(message);
+	// auto [command, data] = parseCommand(messageStr);
 	// std::cout << command << "-" << data << std::endl;
 
 	try {
-		if (command == "BALL") { // BALL:x,y
-			auto values = splitMessage(data);
-			if (values.size() >= 2) {
-				float x = std::stof(values[0]);
-				float y = std::stof(values[1]);
-				_ball->setPosition({x, y});
-			}
-		}
-		else if (command == "PADDLES") { // PADDLES:id1,pos1,id2,pos2
-			auto tokens = splitMessage(data);
-			for (size_t i = 0; i < tokens.size(); i += 2) {
-				if (i + 1 >= tokens.size()) break;
+		json message = json::parse(message);
+		std::string type = message["type"];
 
-				int playerId = std::stoi(tokens[i]);
-				float paddleY = std::stof(tokens[i + 1]);
+		if (type == "update") {
+			// Ball
+            _ball->setPosition({message["content"]["ball"]["x"], message["content"]["ball"]["y"]});
 
-				if (playerId == 1) { // player is the  paddle blue
-					if (_playerId == 1) {
-						float currentY = _playerPaddle->getPosition().y;
-						if (std::abs(paddleY - currentY) > 10.0f) {
-							_playerPaddle->setPosition({30.0f, paddleY});
-						}
-					} else {
-						_opponentPaddle->setPosition({30.0f, paddleY});
-					}
-				}
-				else if (playerId == 2) {
-					if (_playerId == 2) {
-						float currentY = _playerPaddle->getPosition().y;
-						if (std::abs(paddleY - currentY) > 10.0f) {
-							_playerPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
-						}
-					} else {
-						_opponentPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
-					}
-				}
-			}
-		}
-		else if (command == "SCORES") { // SCORES:id1,score1,id2,score2
-			auto tokens = splitMessage(data);
-			for (size_t i = 0; i < tokens.size(); i += 2) {
-				if (i + 1 >= tokens.size()) break;
+			// Paddle
+            auto& paddles = message["content"]["paddles"];
+            for (const auto& [playerId, paddleData] : paddles.items()) {
+                float paddleY = paddleData["y"];
+                if (std::stoi(playerId) == 1) {
+                    if (_playerId == 1) {
+                        float currentY = _playerPaddle->getPosition().y;
+                        if (std::abs(paddleY - currentY) > 10.0f) {
+                            _playerPaddle->setPosition({30.0f, paddleY});
+                        }
+                    } else {
+                        _opponentPaddle->setPosition({30.0f, paddleY});
+                    }
+                }
+                else if (std::stoi(playerId) == 2) {
+                    if (_playerId == 2) {
+                        float currentY = _playerPaddle->getPosition().y;
+                        if (std::abs(paddleY - currentY) > 10.0f) {
+                            _playerPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
+                        }
+                    } else {
+                        _opponentPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
+                    }
+                }
+            }
 
-				int playerId = std::stoi(tokens[i]);
-				int score = std::stoi(tokens[i + 1]);
+			// Score
+            auto& scores = message["content"]["score"];
+            for (const auto& [playerId, score] : scores.items()) {
+                if (std::stoi(playerId) == _playerId) {
+                    _playerScore->update(score);
+                } else {
+                    _opponentScore->update(score);
+                }
+            }
+        }
+        else if (type == "score") {
+            auto& newScores = message["content"]["new_score"];
+            for (const auto& [playerId, score] : newScores.items()) {
+                if (std::stoi(playerId) == _playerId) {
+                    _playerScore->update(score);
+                } else {
+                    _opponentScore->update(score);
+                }
+            }
+        }
+        else if (type == "game_over") {
+            int winner = message["content"]["winner"];
+            backToMenu();
+        }
 
-				if (playerId == _playerId) {
-					_playerScore->update(score);
-				} else {
-					_opponentScore->update(score);
-				}
-			}
-		}
+	} catch (const json::exception& e) {
+		std::cerr << "JSON parsing error: " << e.what() << std::endl;
+	} catch (const std::exception& e) {
+		std::cerr << "Error processing message: " << e.what() << std::endl;
 	}
-	catch (const std::exception& e) {
-		std::cerr << "Error parsing message: " << e.what() << std::endl;
-	}
+
+	// try {
+	// 	if (command == "BALL") { // BALL:x,y
+	// 		auto values = splitMessage(data);
+	// 		if (values.size() >= 2) {
+	// 			float x = std::stof(values[0]);
+	// 			float y = std::stof(values[1]);
+	// 			_ball->setPosition({x, y});
+	// 		}
+	// 	}
+	// 	else if (command == "PADDLES") { // PADDLES:id1,pos1,id2,pos2
+	// 		auto tokens = splitMessage(data);
+	// 		for (size_t i = 0; i < tokens.size(); i += 2) {
+	// 			if (i + 1 >= tokens.size()) break;
+	//
+	// 			int playerId = std::stoi(tokens[i]);
+	// 			float paddleY = std::stof(tokens[i + 1]);
+	//
+	// 			if (playerId == 1) { // player is the  paddle blue
+	// 				if (_playerId == 1) {
+	// 					float currentY = _playerPaddle->getPosition().y;
+	// 					if (std::abs(paddleY - currentY) > 10.0f) {
+	// 						_playerPaddle->setPosition({30.0f, paddleY});
+	// 					}
+	// 				} else {
+	// 					_opponentPaddle->setPosition({30.0f, paddleY});
+	// 				}
+	// 			}
+	// 			else if (playerId == 2) {
+	// 				if (_playerId == 2) {
+	// 					float currentY = _playerPaddle->getPosition().y;
+	// 					if (std::abs(paddleY - currentY) > 10.0f) {
+	// 						_playerPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
+	// 					}
+	// 				} else {
+	// 					_opponentPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	else if (command == "SCORES") { // SCORES:id1,score1,id2,score2
+	// 		auto tokens = splitMessage(data);
+	// 		for (size_t i = 0; i < tokens.size(); i += 2) {
+	// 			if (i + 1 >= tokens.size()) break;
+	//
+	// 			int playerId = std::stoi(tokens[i]);
+	// 			int score = std::stoi(tokens[i + 1]);
+	//
+	// 			if (playerId == _playerId) {
+	// 				_playerScore->update(score);
+	// 			} else {
+	// 				_opponentScore->update(score);
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// catch (const std::exception& e) {
+	// 	std::cerr << "Error parsing message: " << e.what() << std::endl;
+	// }
 }
 
 void Game::sendPlayerData(int direction) {
 	if (_winsockClient && _winsockClient->isConnected()) {
-		std::string paddleMsg = "PADDLE:" + std::to_string(direction);
-		// std::cout << paddleMsg << std::endl;
-		_winsockClient->sendData(paddleMsg);
+		json message = {
+			{"type", "input"},
+			{"content", {
+	                {"direction", direction}
+			}}
+		};
+		_winsockClient->sendData(message.dump());
 	}
 }
 

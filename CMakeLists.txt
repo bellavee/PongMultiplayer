@@ -37,8 +37,8 @@ add_executable(PongMulti src/main.cpp
         src/resources.h
         src/WinsockClient.cpp
         src/WinsockClient.h
-		  src/TextInputField.cpp
-		  src/TextInputField.cpp
+        src/TextInputField.cpp
+        src/TextInputField.cpp
 )
 
 add_executable(Server src/mainServer.cpp
@@ -50,7 +50,7 @@ add_executable(Server src/mainServer.cpp
         src/UI_ServerMenu.cpp
         src/resources.h
         src/TextInputField.cpp
-	src/TextInputField.cpp
+	    src/TextInputField.cpp
         src/Button.cpp
         src/Button.h
         src/UI_ServerRunning.h
