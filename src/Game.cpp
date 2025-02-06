@@ -145,6 +145,14 @@ void Game::checkForPlayers() {
 		std::string type = message["type"];
 		if (type == "connected") {
 			_playerId = message["content"]["player_id"];
+			switch (_playerId)
+			{
+			case 1:
+				_player1Score->setPlayerName(_mainMenu->getClientName());
+				break;
+			default:
+				break;
+			}
 			std::cout << "Connected as player " << _playerId << std::endl;
 		} else if (type == "start") {
 			_player1Score->setPlayerName(message["content"]["player1_name"]);
