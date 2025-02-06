@@ -96,9 +96,11 @@ void Server::readMessage()
 	}
 
 	std::string clientKey = std::to_string(client.sin_addr.s_addr) + ":" + std::to_string(client.sin_port);
-	if (_messageBuffer.find(clientKey) == _messageBuffer.end())
+	if (_messageBuffer.find(clientKey) == _messageBuffer.end()) {
 		_messageBuffer[clientKey] = std::string(recvbuf, recv_len);
-	else
+		_clientsMap[clientKey] = client;
+		_clientsList.push_back(client);
+	} else
 		_messageBuffer[clientKey] += std::string(recvbuf, recv_len);
 
 	if (!_messageBuffer[clientKey].empty() && _messageBuffer[clientKey].back() == '\0') {
@@ -110,15 +112,16 @@ void Server::readMessage()
 			_messageBuffer[clientKey].clear();
 			return;
 		}
+		decodeClientMessages(clientKey, recvbufJson);
 		std::cout << "Data received: from" + clientKey + " :" << recvbufJson.dump(4) << std::endl;
-		sendMessage("Well received", client);
+		sendMessage("Well received", clientKey);
 		_messageBuffer[clientKey].clear();
 	}
 }
 
-void Server::sendMessage(const std::string& message, struct sockaddr_in & client)
+void Server::sendMessage(const std::string& message, const std::string& clientId)
 {
-	if (sendto(m_serverSocket, message.c_str(), message.size(), 0, (struct sockaddr*)&client, sizeof(client)) == SOCKET_ERROR)
+	if (sendto(m_serverSocket, message.c_str(), message.size(), 0, (struct sockaddr*)&_clientsMap[clientId], sizeof(_clientsMap[clientId])) == SOCKET_ERROR)
 		std::cout << "sendto() failed with error code : " + WSAGetLastError() << std::endl;
 }
 
@@ -179,5 +182,9 @@ void Server::render()
 		break;
 	}
 	_window->display();
+}
+
+void Server::decodeClientMessages(const std::string& clientName, nlohmann::json messageContent)
+{
 }
 

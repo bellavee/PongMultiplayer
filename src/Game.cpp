@@ -181,6 +181,7 @@ void Game::resetBall() {
 void Game::checkForPlayers() {
 	std::string message = _winsockClient->receiveData();
 	if (!message.empty()) {
+		std::cout << "received data: " + message << std::endl;
 		auto [command, data] = parseCommand(message);
 
 		if (command == "CONNECTED") { // ex: CONNECT:1 -> playerId=1

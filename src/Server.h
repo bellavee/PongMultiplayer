@@ -28,18 +28,22 @@ public:
 	void Connect();
 private:
 	void readMessage();
-	void sendMessage(const std::string& message, struct sockaddr_in& client);
+	void sendMessage(const std::string& message, const std::string& clientId);
 	void initWinsok();
 	void initWindow();
 	void processEvents();
 	void render();
-
+	void decodeClientMessages(const std::string& clientName, nlohmann::json messageContent);
+	 
 	ServerState _state;
 	SOCKET m_serverSocket;
 	bool m_isRunning;
 	std::unique_ptr<sf::RenderWindow> _window;
 	std::unique_ptr<UI_ServerMenu> _serverMenu;
 	std::unique_ptr<UI_ServerRunning> _serverRunning;
+	std::unordered_map<std::string, sockaddr_in> _clientsMap;
+	std::unordered_map<int, sockaddr_in> _players;
+	std::vector<sockaddr_in> _clientsList;
 	std::unordered_map<std::string, std::string> _messageBuffer;
 };
 
