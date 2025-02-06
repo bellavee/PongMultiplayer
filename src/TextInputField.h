@@ -14,7 +14,7 @@ enum class AllowedCharacters {
 
 class TextInputField : public InterfaceElement {
 public:
-	TextInputField(sf::Vector2f pos, sf::Vector2f size, const std::string& displayText = std::string("SampleText"), AllowedCharacters allowedchars = AllowedCharacters::All);
+	TextInputField(sf::Vector2f pos, sf::Vector2f size, const std::string& displayText = std::string("SampleText"), AllowedCharacters allowedchars = AllowedCharacters::All, int maxChars = 15);
 
 	~TextInputField() {};
 
@@ -22,17 +22,21 @@ public:
 	
 	virtual void handleEvent(const sf::Event& event) override;
 
-	
+	void setActive(bool active);
+	bool isActive() const { return _isActive; }
 
 private:
+	bool isCharacterAllowed(char32_t unicode);
+	bool _isActive;
+
 	sf::RectangleShape _shape;
 	sf::Font _font;
 	sf::Text _text;
 	sf::Text _userText;
-	bool _isActive;
 
 	sf::Vector2f _position;
 	AllowedCharacters _allowedChars;
+	int _maxChars;
 
 protected:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
