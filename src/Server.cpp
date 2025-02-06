@@ -266,7 +266,7 @@ void Server::updateGameState()
 
 void Server::update(float deltatime)
 {
-	_ball->update(deltatime);
+	_ball->update(BALL_SPEED * deltatime);
 	updateGameState();
 }
 

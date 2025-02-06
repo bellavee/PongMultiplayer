@@ -206,27 +206,6 @@ void Game::checkForPlayers() {
 	} catch (const std::exception& e) {
 		std::cerr << "Error processing message: " << e.what() << std::endl;
 	}
-
-	// std::string message = _winsockClient->receiveData();
-	// if (!message.empty()) {
-	// 	auto [command, data] = parseCommand(message);
-	//
-	// 	if (command == "CONNECTED") { // ex: CONNECT:1 -> playerId=1
-	// 		auto tokens = splitMessage(data);
-	// 		if (!tokens.empty()) {
-	// 			_playerId = std::stoi(tokens[0]);
-	// 			std::cout << "Connected as player " << _playerId << std::endl;
-	// 		}
-	// 	}
-	// 	else if (command == "PLAYERS_READY") { // ex: PLAYERS_READY:400
-	// 		auto tokens = splitMessage(data);
-	// 		if (!tokens.empty()) {
-	// 			_paddleSpeed = std::stoi(tokens[0]);
-	// 			std::cout << "Paddle speed " << _paddleSpeed << std::endl;
-	// 		}
-	// 		startGame();
-	// 	}
-	// }
 }
 
 void Game::processServerMessages() {
@@ -302,65 +281,6 @@ void Game::processServerMessages() {
 	} catch (const std::exception& e) {
 		std::cerr << "Error processing message: " << e.what() << std::endl;
 	}
-
-	// try {
-	// 	if (command == "BALL") { // BALL:x,y
-	// 		auto values = splitMessage(data);
-	// 		if (values.size() >= 2) {
-	// 			float x = std::stof(values[0]);
-	// 			float y = std::stof(values[1]);
-	// 			_ball->setPosition({x, y});
-	// 		}
-	// 	}
-	// 	else if (command == "PADDLES") { // PADDLES:id1,pos1,id2,pos2
-	// 		auto tokens = splitMessage(data);
-	// 		for (size_t i = 0; i < tokens.size(); i += 2) {
-	// 			if (i + 1 >= tokens.size()) break;
-	//
-	// 			int playerId = std::stoi(tokens[i]);
-	// 			float paddleY = std::stof(tokens[i + 1]);
-	//
-	// 			if (playerId == 1) { // player is the  paddle blue
-	// 				if (_playerId == 1) {
-	// 					float currentY = _playerPaddle->getPosition().y;
-	// 					if (std::abs(paddleY - currentY) > 10.0f) {
-	// 						_playerPaddle->setPosition({30.0f, paddleY});
-	// 					}
-	// 				} else {
-	// 					_opponentPaddle->setPosition({30.0f, paddleY});
-	// 				}
-	// 			}
-	// 			else if (playerId == 2) {
-	// 				if (_playerId == 2) {
-	// 					float currentY = _playerPaddle->getPosition().y;
-	// 					if (std::abs(paddleY - currentY) > 10.0f) {
-	// 						_playerPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
-	// 					}
-	// 				} else {
-	// 					_opponentPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	else if (command == "SCORES") { // SCORES:id1,score1,id2,score2
-	// 		auto tokens = splitMessage(data);
-	// 		for (size_t i = 0; i < tokens.size(); i += 2) {
-	// 			if (i + 1 >= tokens.size()) break;
-	//
-	// 			int playerId = std::stoi(tokens[i]);
-	// 			int score = std::stoi(tokens[i + 1]);
-	//
-	// 			if (playerId == _playerId) {
-	// 				_playerScore->update(score);
-	// 			} else {
-	// 				_opponentScore->update(score);
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// catch (const std::exception& e) {
-	// 	std::cerr << "Error parsing message: " << e.what() << std::endl;
-	// }
 }
 
 void Game::sendPlayerData(int direction) {
@@ -414,28 +334,4 @@ void Game::render() {
     }
 
     _window->display();
-}
-
-std::vector<std::string> Game::splitMessage(const std::string& message, char delimiter) {
-	std::vector<std::string> tokens;
-	std::stringstream ss(message);
-	std::string token;
-
-	while (std::getline(ss, token, delimiter)) {
-		tokens.push_back(token);
-	}
-
-	return tokens;
-}
-
-std::pair<std::string, std::string> Game::parseCommand(const std::string& message) {
-	size_t pos = message.find(':');
-	if (pos == std::string::npos) {
-		return {"", ""};
-	}
-
-	return {
-		message.substr(0, pos), // command
-		message.substr(pos + 1)  // data
-	};
 }
