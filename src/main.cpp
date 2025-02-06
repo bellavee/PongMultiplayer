@@ -1,6 +1,4 @@
-﻿
-#include <iostream>
-
+﻿#include <iostream>
 #include "Game.h"
 #include "WinsockClient.h"
 
@@ -9,5 +7,4 @@ int main() {
     game.run();
 
     return 0;
-
 }
