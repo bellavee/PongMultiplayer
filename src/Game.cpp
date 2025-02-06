@@ -68,7 +68,7 @@ void Game::join()
 	json message = {
 		{"type", "connect"},
 		{"content", {
-	            {"player_name", "Player"} // placeholder
+	            {"player_name", _mainMenu->getClientName()} // placeholder
 		}}
 	};
 
@@ -189,14 +189,11 @@ void Game::checkForPlayers() {
 
 	std::string messageStr = _winsockClient->receiveData();
 	if (messageStr.empty()) return;
-	std::cout << "Received Data: " + messageStr << std::endl; 
-
-	std::cout << "[checkForPlayers] " << messageStr << std::endl;
+	//std::cout << "[checkForPlayers] " << messageStr << std::endl;
 
 	try {
 		json message = json::parse(messageStr);
 		std::string type = message["type"];
-
 		if (type == "connected") {
 			_playerId = message["content"]["player_id"];
 			std::cout << "Connected as player " << _playerId << std::endl;
@@ -239,7 +236,7 @@ void Game::processServerMessages() {
 	if (messageStr.empty()) return;
 
 	// auto [command, data] = parseCommand(messageStr);
-	std::cout << messageStr << std::endl;
+	//std::cout << messageStr << std::endl;
 
 	try {
 		json message = json::parse(messageStr);
@@ -272,7 +269,7 @@ void Game::processServerMessages() {
                     } else {
                         _opponentPaddle->setPosition({WINDOW_WIDTH - 30.0f, paddleY});
                     }
-                }
+                } // to do handle id = 3 case
             }
 
 			// Score

@@ -9,6 +9,11 @@ Server::Server()
 	, _serverRunning(nullptr)
 	, m_isRunning(false)
 	, _state(ServerState::NOT_RUNNING)
+	, _playerOnePaddle(std::make_unique<Paddle>(30.0f, WINDOW_HEIGHT / 2))
+	, _playerTwoPaddle(std::make_unique<Paddle>(WINDOW_WIDTH - 30.0f, WINDOW_HEIGHT / 2))
+	, _ball(std::make_unique<Ball>(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
+	, _playerOneScore(0)
+	, _playerTwoScore(0)
 {
 }
 
@@ -46,8 +51,9 @@ void Server::Launch(const std::string& ipAddress, int port)
 
 void Server::Run()
 {
-	std::cout << "Fran " << std::endl;
+	sf::Clock clock;
 	while (_window->isOpen()) {
+		float deltaTime = clock.restart().asSeconds();
 		processEvents();
 		render();
 		switch (_state)
@@ -55,6 +61,10 @@ void Server::Run()
 		case ServerState::NOT_RUNNING:
 			break;
 		case ServerState::RUNNING:
+			readMessage();
+			break;
+		case ServerState::GAME_STARTED:
+			update(deltaTime);
 			readMessage();
 			break;
 		case ServerState::CLOSED:
@@ -87,19 +97,18 @@ void Server::readMessage()
 	char recvbuf[512];
 
 	int recv_len = recvfrom(m_serverSocket, recvbuf, 512, 0, (struct sockaddr*)&client, &len);
+	
 	if (recv_len == SOCKET_ERROR) {
 		int err = WSAGetLastError();
-		if (err == WSAEWOULDBLOCK) // No data available
+		if (err == WSAEWOULDBLOCK)
 			return;
-		std::cerr << "ReadMessage failed: " << err << std::endl;
 		return;
 	}
-
 	std::string clientKey = std::to_string(client.sin_addr.s_addr) + ":" + std::to_string(client.sin_port);
 	if (_messageBuffer.find(clientKey) == _messageBuffer.end()) {
 		_messageBuffer[clientKey] = std::string(recvbuf, recv_len);
 		_clientsMap[clientKey] = client;
-		_clientsList.push_back(client);
+		_clientsList.push_back(clientKey);
 	} else
 		_messageBuffer[clientKey] += std::string(recvbuf, recv_len);
 
@@ -113,15 +122,15 @@ void Server::readMessage()
 			return;
 		}
 		decodeClientMessages(clientKey, recvbufJson);
-		std::cout << "Data received: from" + clientKey + " :" << recvbufJson.dump(4) << std::endl;
-		sendMessage("Well received", clientKey);
 		_messageBuffer[clientKey].clear();
 	}
 }
 
 void Server::sendMessage(const std::string& message, const std::string& clientId)
 {
-	if (sendto(m_serverSocket, message.c_str(), message.size(), 0, (struct sockaddr*)&_clientsMap[clientId], sizeof(_clientsMap[clientId])) == SOCKET_ERROR)
+	std::string cpy = message;
+	cpy.push_back('\0');
+	if (sendto(m_serverSocket, cpy.c_str(), cpy.size(), 0, (struct sockaddr*)&_clientsMap[clientId], sizeof(_clientsMap[clientId])) == SOCKET_ERROR)
 		std::cout << "sendto() failed with error code : " + WSAGetLastError() << std::endl;
 }
 
@@ -157,6 +166,9 @@ void Server::processEvents()
 		case ServerState::RUNNING:
 			_serverRunning->handleEvent(*event);
 			break;
+		case ServerState::GAME_STARTED:
+			_serverRunning->handleEvent(*event);
+			break;
 		case ServerState::CLOSED:
 			break;
 		default:
@@ -176,6 +188,9 @@ void Server::render()
 	case ServerState::RUNNING:
 		_window->draw(*_serverRunning);
 		break;
+	case ServerState::GAME_STARTED:
+		_window->draw(*_serverRunning);
+		break;
 	case ServerState::CLOSED:
 		break;
 	default:
@@ -186,5 +201,72 @@ void Server::render()
 
 void Server::decodeClientMessages(const std::string& clientName, nlohmann::json messageContent)
 {
+	if (messageContent["type"] == "connect")
+		newClientConnected(clientName, messageContent);
+	else if (messageContent["type"] == "input") {
+
+	}
+}
+
+void Server::newClientConnected(const std::string& clientId, nlohmann::json messageContent)
+{
+	int id = (_players.size() < 2) ? _players.size() + 1 : 3;
+	_clientsNamesList[clientId] = messageContent["content"]["player_name"];
+	std::cout << "Client name: " + _clientsNamesList[clientId] + "connected" << std::endl;
+	if (_players.size() < 2) {
+		_players[id] = clientId; // _clientsMap[clientId];
+		std::cout << "player: " << id << "connected" << std::endl;
+	}
+	json messJson = {
+		{"type", "connected"},
+		{"content" , {{"player_id", id}}} };
+	sendMessage(messJson.dump(), clientId);
+	if (_players.size() == 2)
+		startGame();
+}
+
+void Server::startGame()
+{
+	_state = ServerState::GAME_STARTED;
+	json messJson = {
+		{"type", "start"},
+		{"content" , {{ {{"player1_name", _clientsNamesList[_players[1]]}},
+		{{"player2_name", _clientsNamesList[_players[2]]}}}} } };
+	sendMessageToAll(messJson.dump());
+	updateGameState();
+}
+
+void Server::sendMessageToAll(const std::string& mess)
+{
+	for (int i = 0; i < _clientsList.size(); i++)
+		sendMessage(mess, _clientsList[i]);
+}
+
+void Server::updateGameState()
+{
+	json messJson = {
+	{"type", "update"},
+	{"content", {
+		{"ball", {
+			{"x", _ball->getPosition().x},
+			{"y", _ball->getPosition().y}
+		}},
+		{"paddles", {
+			{"1", {{"y", _playerOnePaddle->getPosition().y}}},
+			{"2", {{"y", _playerTwoPaddle->getPosition().y}}}
+		}},
+		{"score", {
+			{"1", _playerOneScore},
+			{"2", _playerTwoScore}
+		}}
+	}}
+	};
+	sendMessageToAll(messJson.dump());
+}
+
+void Server::update(float deltatime)
+{
+	_ball->update(deltatime);
+	updateGameState();
 }
 
