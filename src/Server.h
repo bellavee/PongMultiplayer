@@ -48,6 +48,8 @@ private:
 
 	void checkPaddleCollision(Ball &ball, const Paddle &paddle, bool isLeftPaddle);
 
+	void checkScore();
+
 	ServerState _state;
 	SOCKET m_serverSocket;
 	bool m_isRunning;

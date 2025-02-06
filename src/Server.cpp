@@ -248,7 +248,7 @@ void Server::handlePaddleInput(const std::string& clientId, int direction) {
 	else if (playerId == 2) {
 		newPos = _playerTwoPaddle->getPosition().y + direction * PADDLE_SPEED * (1.0f/60.0f);
 		newPos = std::max(PADDLE_HEIGHT/2.0f, std::min(newPos, WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f));
-		_playerTwoPaddle->setPosition({0, newPos});
+		_playerTwoPaddle->setPosition({WINDOW_WIDTH - 30, newPos});
 		std::cout << "[Server] Processing input for Player " << playerId << "\n";
 	}
 }
@@ -256,6 +256,9 @@ void Server::handlePaddleInput(const std::string& clientId, int direction) {
 void Server::startGame()
 {
 	_state = ServerState::GAME_STARTED;
+	_playerOneScore = 0;
+	_playerTwoScore = 0;
+	_ball->reset(WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
 	json messJson = {
 		{"type", "start"},
 		{"content", {
@@ -298,6 +301,7 @@ void Server::updateGameState()
 void Server::update(float deltatime)
 {
 	_ball->update(BALL_SPEED * deltatime);
+	checkScore();
 	updateGameState();
 
 	checkPaddleCollision(*_ball, *_playerOnePaddle, true);
@@ -330,6 +334,49 @@ void Server::checkPaddleCollision(Ball& ball, const Paddle& paddle, bool isLeftP
 				float relativeIntersectY = (ballCenterY - paddlePos.y) / (PADDLE_HEIGHT/2);
 				ball.setVelocityY(relativeIntersectY * BALL_SPEED);
 			}
+		}
+	}
+}
+
+void Server::checkScore() {
+	auto ballPos = _ball->getPosition();
+	bool scoreChanged = false;
+	int scoringPlayer = 0;
+
+	if (ballPos.x <= 0) {
+		_playerTwoScore++;
+		scoringPlayer = 2;
+		_ball->reset(WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+		scoreChanged = true;
+	}
+	else if (ballPos.x + BALL_RADIUS * 2 >= WINDOW_WIDTH) {
+		_playerOneScore++;
+		scoringPlayer = 1;
+		_ball->reset(WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+		scoreChanged = true;
+	}
+
+	if (scoreChanged) {
+		if (_playerOneScore >= 5 || _playerTwoScore >= 5) {
+			json gameOverMessage = {
+				{"type", "game_over"},
+				{"content", {
+	                    {"winner", scoringPlayer}
+				}}
+			};
+			sendMessageToAll(gameOverMessage.dump());
+			_state = ServerState::RUNNING;
+		} else {
+			json scoreMessage = {
+				{"type", "score"},
+				{"content", {
+	                    {"new_score", {
+	                        {"1", _playerOneScore},
+							{"2", _playerTwoScore}
+	                    }}
+				}}
+			};
+			sendMessageToAll(scoreMessage.dump());
 		}
 	}
 }
