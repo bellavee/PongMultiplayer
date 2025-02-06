@@ -24,14 +24,6 @@ void Ball::update(float deltaTime) {
         setPosition({position.x, WINDOW_HEIGHT - BALL_RADIUS * 2});
         reverseYVelocity();
     }
-
-    if (position.x <= 0) {
-        setPosition({0, position.y});
-        reverseXVelocity();
-    } else if (position.x + BALL_RADIUS * 2 >= WINDOW_WIDTH) {
-        setPosition({WINDOW_WIDTH - BALL_RADIUS * 2, position.y});
-        reverseXVelocity();
-    }
 }
 
 void Ball::reset(float x, float y) {

@@ -11,7 +11,7 @@ Game::Game() {
     );
     _window->setFramerateLimit(60);
 
-    _player1Paddle = std::make_unique<Paddle>(30.0f, WINDOW_HEIGHT / 2);
+    _player1Paddle = std::make_unique<Paddle>(0.0f, WINDOW_HEIGHT / 2);
     _player2Paddle = std::make_unique<Paddle>(WINDOW_WIDTH - 30.0f, WINDOW_HEIGHT / 2);
     _ball = std::make_unique<Ball>(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     _player1Score = std::make_unique<Score>(WINDOW_WIDTH / 5, 50.0f);
@@ -209,6 +209,7 @@ void Game::checkForPlayers() {
 			_player1Score->setPlayerName(message["content"]["player1_name"]);
 			_player2Score->setPlayerName(message["content"]["player2_name"]);
 			startGame();
+			std::cout << "Start game " << std::endl;
 		}
 
 	} catch (const json::exception& e) {

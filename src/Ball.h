@@ -16,6 +16,7 @@ public:
     void reverseXVelocity();
     void reverseYVelocity();
     float getRadius() const;
+    void setVelocityY(float vy) { _velocity.y = vy; }
 
 private:
     sf::CircleShape* _circleShape;

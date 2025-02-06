@@ -216,7 +216,7 @@ void Server::newClientConnected(const std::string& clientId, nlohmann::json mess
 	std::cout << "Client name: " + _clientsNamesList[clientId] + "connected" << std::endl;
 	if (_players.size() < 2) {
 		_players[id] = clientId; // _clientsMap[clientId];
-		std::cout << "player: " << id << "connected" << std::endl;
+		std::cout << "player: " << id << " connected" << std::endl;
 	}
 	json messJson = {
 		{"type", "connected"},
@@ -241,6 +241,9 @@ void Server::clientIsMoving(const std::string& clientName, nlohmann::json messag
 void Server::startGame()
 {
 	_state = ServerState::GAME_STARTED;
+	_playerOneScore = 0;
+	_playerTwoScore = 0;
+	_ball->reset(WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
 	json messJson = {
 		{"type", "start"},
 		{"content", {
@@ -283,6 +286,82 @@ void Server::updateGameState()
 void Server::update(float deltatime)
 {
 	_ball->update(BALL_SPEED * deltatime);
+	checkScore();
 	updateGameState();
+
+	checkPaddleCollision(*_ball, *_playerOnePaddle, true);
+	checkPaddleCollision(*_ball, *_playerTwoPaddle, false);
 }
 
+void Server::checkPaddleCollision(Ball& ball, const Paddle& paddle, bool isLeftPaddle) {
+	auto ballPos = ball.getPosition();
+	auto paddlePos = paddle.getPosition();
+
+	float ballCenterX = ballPos.x + ball.getRadius();
+	float ballCenterY = ballPos.y + ball.getRadius();
+
+	if (isLeftPaddle) {
+		if (ballCenterX - ball.getRadius() <= paddlePos.x + PADDLE_WIDTH/2 &&
+			ballCenterX >= paddlePos.x - PADDLE_WIDTH/2) {
+			if (ballCenterY >= paddlePos.y - PADDLE_HEIGHT/2 && ballCenterY <= paddlePos.y + PADDLE_HEIGHT/2) {
+				ball.setPosition({paddlePos.x + PADDLE_WIDTH/2 + ball.getRadius() - (ballCenterX - ballPos.x), ballPos.y});
+				ball.reverseXVelocity();
+				float relativeIntersectY = (ballCenterY - paddlePos.y) / (PADDLE_HEIGHT/2);
+				ball.setVelocityY(relativeIntersectY * BALL_SPEED);
+			}
+		}
+	} else {
+		if (ballCenterX + ball.getRadius() >= paddlePos.x - PADDLE_WIDTH/2 &&
+			ballCenterX <= paddlePos.x + PADDLE_WIDTH/2) {
+			if (ballCenterY >= paddlePos.y - PADDLE_HEIGHT/2 && ballCenterY <= paddlePos.y + PADDLE_HEIGHT/2) {
+				ball.setPosition({paddlePos.x - PADDLE_WIDTH/2 - ball.getRadius() - (ballCenterX - ballPos.x), ballPos.y});
+				ball.reverseXVelocity();
+				float relativeIntersectY = (ballCenterY - paddlePos.y) / (PADDLE_HEIGHT/2);
+				ball.setVelocityY(relativeIntersectY * BALL_SPEED);
+			}
+		}
+	}
+}
+
+void Server::checkScore() {
+	auto ballPos = _ball->getPosition();
+	bool scoreChanged = false;
+	int scoringPlayer = 0;
+
+	if (ballPos.x <= 0) {
+		_playerTwoScore++;
+		scoringPlayer = 2;
+		_ball->reset(WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+		scoreChanged = true;
+	}
+	else if (ballPos.x + BALL_RADIUS * 2 >= WINDOW_WIDTH) {
+		_playerOneScore++;
+		scoringPlayer = 1;
+		_ball->reset(WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+		scoreChanged = true;
+	}
+
+	if (scoreChanged) {
+		if (_playerOneScore >= 5 || _playerTwoScore >= 5) {
+			json gameOverMessage = {
+				{"type", "game_over"},
+				{"content", {
+	                    {"winner", scoringPlayer}
+				}}
+			};
+			sendMessageToAll(gameOverMessage.dump());
+			_state = ServerState::RUNNING;
+		} else {
+			json scoreMessage = {
+				{"type", "score"},
+				{"content", {
+	                    {"new_score", {
+	                        {"1", _playerOneScore},
+							{"2", _playerTwoScore}
+	                    }}
+				}}
+			};
+			sendMessageToAll(scoreMessage.dump());
+		}
+	}
+}

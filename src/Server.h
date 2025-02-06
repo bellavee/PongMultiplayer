@@ -43,7 +43,11 @@ private:
 	void sendMessageToAll(const std::string& mess);
 	void updateGameState();
 	void update(float deltatime);
-	 
+
+	void checkPaddleCollision(Ball &ball, const Paddle &paddle, bool isLeftPaddle);
+
+	void checkScore();
+
 	ServerState _state;
 	SOCKET m_serverSocket;
 	bool m_isRunning;
