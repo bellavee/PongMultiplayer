@@ -53,11 +53,11 @@ private:
 
 private:
     std::unique_ptr<sf::RenderWindow> _window;
-    std::unique_ptr<Paddle> _playerPaddle;
-    std::unique_ptr<Paddle> _opponentPaddle;
+    std::unique_ptr<Paddle> _player1Paddle;
+    std::unique_ptr<Paddle> _player2Paddle;
     std::unique_ptr<Ball> _ball;
-    std::unique_ptr<Score> _playerScore;
-    std::unique_ptr<Score> _opponentScore;
+    std::unique_ptr<Score> _player1Score;
+    std::unique_ptr<Score> _player2Score;
     std::unique_ptr<UI_MainMenu> _mainMenu;
     std::unique_ptr<UI_PauseMenu> _pauseMenu;
     std::unique_ptr<UI_LostConnection> _lostConnectionPopup;
