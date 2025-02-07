@@ -44,6 +44,9 @@ private:
     void processEvents();
     void update(float deltaTime);
     void render();
+
+    void disconnect();
+
     void handleCollisions();
     void resetBall();
     void checkForPlayers();

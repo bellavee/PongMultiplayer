@@ -94,6 +94,11 @@ std::string WinsockClient::receiveData() {
     else {
         logError("recv failed");
     }
+    if (iResult == 0 || WSAGetLastError() == WSAECONNRESET || WSAGetLastError() == WSAECONNABORTED) {
+        std::cerr << "Connection lost" << std::endl;
+        _isConnected = false;
+        cleanup();
+    }
     return "";
 }
 

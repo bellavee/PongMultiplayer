@@ -216,7 +216,35 @@ void Server::decodeClientMessages(const std::string& clientName, nlohmann::json 
 		newClientConnected(clientName, messageContent);
 	else if (messageContent["type"] == "input" && _state != ServerState::GAME_ENDED) {
 		clientIsMoving(clientName, messageContent);
+	} else if (messageContent["type"] == "disconnect") {
+
 	}
+}
+
+void Server::playerDisconnect(const std::string& clientId, nlohmann::json messageContent) {
+	int disconnectedPlayerId = messageContent["content"]["player_id"];
+	if (disconnectedPlayerId == 0) return;
+	_players.erase(disconnectedPlayerId);
+
+	auto it = std::find(_clientsList.begin(), _clientsList.end(), clientId);
+	if (it != _clientsList.end()) {
+		_clientsList.erase(it);
+	}
+	_clientsMap.erase(clientId);
+
+	std::string disconnectedPlayerName = _clientsNamesList[clientId];
+	_clientsNamesList.erase(clientId);
+
+	json disconnectMessage = {
+		{"type", "player_disconnected"},
+		{"content", {
+	            {"player_id", disconnectedPlayerId},
+				{"player_name", disconnectedPlayerName}
+		}}
+	};
+	sendMessageToAll(disconnectMessage.dump());
+
+	_serverRunning->addNewClient(disconnectedPlayerName + " has disconnected");
 }
 
 void Server::newClientConnected(const std::string& clientId, nlohmann::json messageContent)
