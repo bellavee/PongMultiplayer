@@ -101,6 +101,9 @@ void Game::processEvents() {
         if (event->is<sf::Event::Closed>()) {
         	disconnect();
         	_window->close();
+        } else if (event->getIf<sf::Event::Resized>()) {
+        	_state = GameState::LostConnection;
+        	disconnect();
         }
 
 		switch (_state) {
@@ -120,7 +123,7 @@ void Game::processEvents() {
 		if (_state == GameState::Playing) {
 			if (event->is<sf::Event::KeyPressed>()) {
 				auto keyEvent = event->getIf<sf::Event::KeyPressed>();
-				if (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::Z)
+				if (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::Z || keyEvent->code == sf::Keyboard::Key::W)
 					sendPlayerData(-1);
 				else if (keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S)
 					sendPlayerData(1);
@@ -128,7 +131,7 @@ void Game::processEvents() {
 			else if (event->is<sf::Event::KeyReleased>()) {
 				auto keyEvent = event->getIf<sf::Event::KeyReleased>();
 				if (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::Z ||
-					keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S)
+					keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S || keyEvent->code == sf::Keyboard::Key::W)
 					sendPlayerData(0);
 			}
 		}
@@ -138,6 +141,7 @@ void Game::processEvents() {
 void Game::update(float deltaTime) {
 	if (!_winsockClient || !_winsockClient->isConnected()) {
 		_state = GameState::LostConnection;
+		disconnect();
 		return;
 	}
 
