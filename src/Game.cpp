@@ -20,6 +20,7 @@ Game::Game() {
 	_mainMenu = std::make_unique<UI_MainMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { join(); }, [this]() { quit(); });
 	_pauseMenu = std::make_unique<UI_PauseMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { resumeGame(); }, [this]() { backToMenu(); });
     _lostConnectionPopup = std::make_unique<UI_LostConnection>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { backToMenu(); });
+	_waitingPlayerPopup = std::make_unique<UI_WaitingPlayer>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { backToMenu(); });
 
     _player1Paddle->setColor(sf::Color(66, 135, 245)); // blue
     _player2Paddle->setColor(sf::Color(245, 66, 66)); // red
@@ -107,6 +108,9 @@ void Game::processEvents() {
 			break;
 		case GameState::LostConnection:
 			_lostConnectionPopup->handleEvent(*event);
+			break;
+		case GameState::Waiting:
+			_waitingPlayerPopup->handleEvent(*event);
 			break;
 		}
 		if (_state == GameState::Playing) {
@@ -286,7 +290,7 @@ void Game::render() {
 
 	  case GameState::Waiting:
 	  {
-		  // black window
+		  _window->draw(*_waitingPlayerPopup);
 		  break;
 	  }
     default:
