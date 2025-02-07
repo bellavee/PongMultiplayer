@@ -15,6 +15,8 @@ Server::Server()
 	, _playerOneScore(0)
 	, _playerTwoScore(0)
 	, _playerSpeed(15)
+	, _playerOneDir(0)
+	, _playerTwoDir(0)
 {
 }
 
@@ -65,8 +67,8 @@ void Server::Run()
 			readMessage();
 			break;
 		case ServerState::GAME_STARTED:
-			update(deltaTime);
 			readMessage();
+			update(deltaTime);
 			break;
 		case ServerState::CLOSED:
 			Close();
@@ -229,12 +231,22 @@ void Server::newClientConnected(const std::string& clientId, nlohmann::json mess
 void Server::clientIsMoving(const std::string& clientName, nlohmann::json messageContent)
 {
 	int dir = messageContent["content"]["direction"];
-	if (_players[1] == clientName) {
-		sf::Vector2f newPos = _playerOnePaddle->getPosition() + (sf::Vector2f{ 0, 1 } * (_playerSpeed * dir));
-		_playerOnePaddle->setPosition(newPos);
-	} else if (_players[2] == clientName) {
-		sf::Vector2f newPos = _playerTwoPaddle->getPosition() + (sf::Vector2f{ 0, 1 } *(_playerSpeed * dir));
-		_playerTwoPaddle->setPosition(newPos);
+	if (_players[1] == clientName)
+		_playerOneDir = dir;
+	else if (_players[2] == clientName)
+		_playerTwoDir = dir;
+}
+
+void Server::updatePlayersPosition()
+{
+	if (_playerOneDir != 0) {
+		sf::Vector2f newPos = _playerOnePaddle->getPosition() + (sf::Vector2f{ 0, 1 } *(_playerSpeed * _playerOneDir));
+		if (newPos.y >= 0 && newPos.y <= (WINDOW_HEIGHT  - PADDLE_HEIGHT))
+			_playerOnePaddle->setPosition(newPos);
+	} else if (_playerTwoDir != 0) {
+		sf::Vector2f newPos = _playerTwoPaddle->getPosition() + (sf::Vector2f{ 0, 1 } *(_playerSpeed * _playerTwoDir));
+		if (newPos.y >= 0 && newPos.y <= (WINDOW_HEIGHT - PADDLE_HEIGHT))
+			_playerTwoPaddle->setPosition(newPos);
 	}
 }
 
@@ -287,8 +299,8 @@ void Server::update(float deltatime)
 {
 	_ball->update(BALL_SPEED * deltatime);
 	checkScore();
+	updatePlayersPosition();
 	updateGameState();
-
 	checkPaddleCollision(*_ball, *_playerOnePaddle, true);
 	checkPaddleCollision(*_ball, *_playerTwoPaddle, false);
 }

@@ -109,23 +109,19 @@ void Game::processEvents() {
 			_lostConnectionPopup->handleEvent(*event);
 			break;
 		}
-
 		if (_state == GameState::Playing) {
 			if (event->is<sf::Event::KeyPressed>()) {
 				auto keyEvent = event->getIf<sf::Event::KeyPressed>();
-				if (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::Z) {
+				if (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::Z)
 					sendPlayerData(-1);
-				}
-				else if (keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S) {
+				else if (keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S)
 					sendPlayerData(1);
-				}
 			}
 			else if (event->is<sf::Event::KeyReleased>()) {
 				auto keyEvent = event->getIf<sf::Event::KeyReleased>();
 				if (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::Z ||
-					keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S) {
-					sendPlayerData(0);  // Arrêt du mouvement ?
-				}
+					keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S)
+					sendPlayerData(0);
 			}
 		}
     }

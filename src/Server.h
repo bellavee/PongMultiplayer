@@ -39,6 +39,7 @@ private:
 	void decodeClientMessages(const std::string& clientName, nlohmann::json messageContent);
 	void newClientConnected(const std::string& clientName, nlohmann::json messageContent);
 	void clientIsMoving(const std::string& clientName, nlohmann::json messageContent);
+	void updatePlayersPosition();
 	void startGame();
 	void sendMessageToAll(const std::string& mess);
 	void updateGameState();
@@ -66,6 +67,8 @@ private:
 	int _playerOneScore;
 	int _playerTwoScore;
 	float _playerSpeed;
+	int _playerOneDir;
+	int _playerTwoDir;
 };
 
 #endif
