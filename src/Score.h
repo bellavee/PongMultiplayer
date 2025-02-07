@@ -13,6 +13,7 @@ public:
     void reset();
     void update(int value);
     void setPlayerName(const std::string& name) { _playerName = name; update(_value); }
+    std::string getPlayerName() { return _playerName; }
 
 private:
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;

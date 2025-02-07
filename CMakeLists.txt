@@ -41,6 +41,9 @@ add_executable(PongMulti src/main.cpp
         src/TextInputField.h
 	src/UI_WaitingPlayer.cpp
 	src/UI_WaitingPlayer.h
+        src/TextInputField.cpp
+	src/UI_PlayMenu.h
+	src/UI_PlayMenu.cpp
 )
 
 add_executable(Server src/mainServer.cpp

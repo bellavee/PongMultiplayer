@@ -21,6 +21,8 @@ Game::Game() {
 	_pauseMenu = std::make_unique<UI_PauseMenu>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { resumeGame(); }, [this]() { backToMenu(); });
     _lostConnectionPopup = std::make_unique<UI_LostConnection>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { backToMenu(); });
 	_waitingPlayerPopup = std::make_unique<UI_WaitingPlayer>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { backToMenu(); });
+	_playMenu = std::make_unique<UI_PlayMenu>();
+	_lostConnectionPopup = std::make_unique<UI_LostConnection>(WINDOW_WIDTH, WINDOW_HEIGHT, [this]() { backToMenu(); });
 
     _player1Paddle->setColor(sf::Color(66, 135, 245)); // blue
     _player2Paddle->setColor(sf::Color(245, 66, 66)); // red
@@ -237,6 +239,7 @@ void Game::processServerMessages() {
         }
         else if (type == "game_over") {
             int winner = message["content"]["winner"];
+			_playMenu->setContent(((winner == 1) ? _player1Score->getPlayerName() : _player2Score->getPlayerName()) + " is the winner !");
             //backToMenu();
         }
 
@@ -287,8 +290,11 @@ void Game::render() {
     case GameState::LostConnection:
 		_window->draw(*_lostConnectionPopup);
         break;
+	case GameState::Playing:
+		_window->draw(*_playMenu);
+		break;
 
-	  case GameState::Waiting:
+	 case GameState::Waiting:
 	  {
 		  _window->draw(*_waitingPlayerPopup);
 		  break;

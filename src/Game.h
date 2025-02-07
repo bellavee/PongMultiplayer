@@ -14,6 +14,7 @@
 #include "Score.h"
 #include "UI_MainMenu.h"
 #include "UI_PauseMenu.h"
+#include "UI_PlayMenu.h"
 #include "UI_LostConnection.h"
 #include "UI_WaitingPlayer.h"
 #include "WinsockClient.h"
@@ -61,6 +62,7 @@ private:
     std::unique_ptr<Score> _player2Score;
     std::unique_ptr<UI_MainMenu> _mainMenu;
     std::unique_ptr<UI_PauseMenu> _pauseMenu;
+    std::unique_ptr<UI_PlayMenu> _playMenu;
     std::unique_ptr<UI_LostConnection> _lostConnectionPopup;
     std::unique_ptr<UI_WaitingPlayer> _waitingPlayerPopup;
     std::unique_ptr<WinsockClient> _winsockClient;
