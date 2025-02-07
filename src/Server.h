@@ -16,6 +16,7 @@ enum class ServerState {
 	NOT_RUNNING,
 	RUNNING,
 	GAME_STARTED,
+	GAME_ENDED,
 	CLOSED,
 };
 
@@ -44,6 +45,7 @@ private:
 	void sendMessageToAll(const std::string& mess);
 	void updateGameState();
 	void update(float deltatime);
+	void handleEndGame();
 
 	void checkPaddleCollision(Ball &ball, const Paddle &paddle, bool isLeftPaddle);
 

@@ -34,7 +34,6 @@ void Server::Launch(const std::string& ipAddress, int port)
 		std::cout << "Could not create socket : " + WSAGetLastError() << std::endl;
 		return;
 	}
-	std::cout << "Socket created." << std::endl;
 
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = inet_addr(ipAddress.c_str());
@@ -69,6 +68,9 @@ void Server::Run()
 		case ServerState::GAME_STARTED:
 			readMessage();
 			update(deltaTime);
+			break;
+		case ServerState::GAME_ENDED:
+			readMessage();
 			break;
 		case ServerState::CLOSED:
 			Close();
@@ -172,6 +174,9 @@ void Server::processEvents()
 		case ServerState::GAME_STARTED:
 			_serverRunning->handleEvent(*event);
 			break;
+		case ServerState::GAME_ENDED:
+			_serverRunning->handleEvent(*event);
+			break;
 		case ServerState::CLOSED:
 			break;
 		default:
@@ -194,6 +199,9 @@ void Server::render()
 	case ServerState::GAME_STARTED:
 		_window->draw(*_serverRunning);
 		break;
+	case ServerState::GAME_ENDED:
+		_window->draw(*_serverRunning);
+		break;
 	case ServerState::CLOSED:
 		break;
 	default:
@@ -206,7 +214,7 @@ void Server::decodeClientMessages(const std::string& clientName, nlohmann::json 
 {
 	if (messageContent["type"] == "connect")
 		newClientConnected(clientName, messageContent);
-	else if (messageContent["type"] == "input") {
+	else if (messageContent["type"] == "input" && _state != ServerState::GAME_ENDED) {
 		clientIsMoving(clientName, messageContent);
 	}
 }
@@ -215,17 +223,20 @@ void Server::newClientConnected(const std::string& clientId, nlohmann::json mess
 {
 	int id = (_players.size() < 2) ? _players.size() + 1 : 3;
 	_clientsNamesList[clientId] = messageContent["content"]["player_name"];
-	std::cout << "Client name: " + _clientsNamesList[clientId] + "connected" << std::endl;
 	if (_players.size() < 2) {
-		_players[id] = clientId; // _clientsMap[clientId];
-		std::cout << "player: " << id << " connected" << std::endl;
-	}
+		_players[id] = clientId;
+		_serverRunning->addNewClient("Player " + _clientsNamesList[clientId] + " is now connected");
+	} else
+		_serverRunning->addNewClient("Watcher " + _clientsNamesList[clientId] + " is now connected");
 	json messJson = {
 		{"type", "connected"},
 		{"content" , {{"player_id", id}}} };
+	
 	sendMessage(messJson.dump(), clientId);
-	if (_players.size() == 2)
+	if (_players.size() == 2 && _state != ServerState::GAME_ENDED)
 		startGame();
+	if (_state == ServerState::GAME_ENDED)
+		handleEndGame();
 }
 
 void Server::clientIsMoving(const std::string& clientName, nlohmann::json messageContent)
@@ -305,6 +316,19 @@ void Server::update(float deltatime)
 	checkPaddleCollision(*_ball, *_playerTwoPaddle, false);
 }
 
+void Server::handleEndGame()
+{
+	if (_state != ServerState::GAME_ENDED)
+		return;
+	json gameOverMessage = {
+				{"type", "game_over"},
+				{"content", {
+						{"winner", (_playerOneScore >= WINNING_SCORE) ? 1 : 2}
+				}}
+	};
+	sendMessageToAll(gameOverMessage.dump());
+}
+
 void Server::checkPaddleCollision(Ball& ball, const Paddle& paddle, bool isLeftPaddle) {
 	auto ballPos = ball.getPosition();
 	auto paddlePos = paddle.getPosition();
@@ -354,15 +378,10 @@ void Server::checkScore() {
 	}
 
 	if (scoreChanged) {
-		if (_playerOneScore >= 5 || _playerTwoScore >= 5) {
-			json gameOverMessage = {
-				{"type", "game_over"},
-				{"content", {
-	                    {"winner", scoringPlayer}
-				}}
-			};
-			sendMessageToAll(gameOverMessage.dump());
-			_state = ServerState::RUNNING;
+		if (_playerOneScore >= WINNING_SCORE || _playerTwoScore >= WINNING_SCORE) {
+			_state = ServerState::GAME_ENDED;
+			_serverRunning->addNewClient(_clientsNamesList[_players[scoringPlayer]] + " is the winner");
+			handleEndGame();
 		} else {
 			json scoreMessage = {
 				{"type", "score"},

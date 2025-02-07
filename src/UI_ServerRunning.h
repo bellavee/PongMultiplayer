@@ -16,11 +16,14 @@ public:
 	UI_ServerRunning(float width, float height);
 
 	void setContent(const std::string& content);
+	void addNewClient(const std::string& content);
 	virtual void handleEvent(const sf::Event& event) override;
 
 private:
 	sf::Text _title;
 	sf::Font _font;
+	sf::Text _content;
+	sf::Font _contentFont;
 
 protected:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;

@@ -4,6 +4,7 @@
 constexpr int WINDOW_WIDTH = 1200;
 constexpr int WINDOW_HEIGHT = 700;
 
+
 constexpr const char* WINDOW_TITLE = "Pong! Multiplayer";
 
 // Fonts assets path
@@ -18,3 +19,6 @@ const float PADDLE_SPEED = 400.0f;
 // Ball
 const float BALL_RADIUS = 20.0f;
 const float BALL_SPEED = 25.f;
+
+constexpr int WINNING_SCORE = 5
+;
