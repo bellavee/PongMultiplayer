@@ -217,11 +217,12 @@ void Server::decodeClientMessages(const std::string& clientName, nlohmann::json 
 	else if (messageContent["type"] == "input" && _state != ServerState::GAME_ENDED) {
 		clientIsMoving(clientName, messageContent);
 	} else if (messageContent["type"] == "disconnect") {
-
+		playerDisconnect(clientName, messageContent);
 	}
 }
 
 void Server::playerDisconnect(const std::string& clientId, nlohmann::json messageContent) {
+	std::cout << "Player disconnect: " << messageContent << std::endl;
 	int disconnectedPlayerId = messageContent["content"]["player_id"];
 	if (disconnectedPlayerId == 0) return;
 	_players.erase(disconnectedPlayerId);
