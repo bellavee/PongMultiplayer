@@ -29,7 +29,7 @@ UI_LostConnection::UI_LostConnection(float width, float height, std::function<vo
 	_title.setPosition(sf::Vector2f(_popupShape->getGlobalBounds().getCenter().x, 3 * _popupShape->getGlobalBounds().getCenter().y / 4));
 
 	_text.setFont(_font);
-	_text.setString("Waiting for reconnect...");
+	_text.setString("Game has ended...");
 	_text.setCharacterSize(18);
 	_text.setFillColor(sf::Color::White);
 	_text.setOrigin(_text.getGlobalBounds().getCenter());

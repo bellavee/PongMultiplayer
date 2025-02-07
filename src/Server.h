@@ -38,6 +38,9 @@ private:
 	void processEvents();
 	void render();
 	void decodeClientMessages(const std::string& clientName, nlohmann::json messageContent);
+
+	void playerDisconnect(const std::string &clientId, nlohmann::json messageContent);
+
 	void newClientConnected(const std::string& clientName, nlohmann::json messageContent);
 	void clientIsMoving(const std::string& clientName, nlohmann::json messageContent);
 	void updatePlayersPosition();

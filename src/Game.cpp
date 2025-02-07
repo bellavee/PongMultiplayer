@@ -98,9 +98,14 @@ void Game::quit()
 
 void Game::processEvents() {
     while (const std::optional event = _window->pollEvent()) {
-        if (event->is<sf::Event::Closed>())
-            _window->close();
-        
+        if (event->is<sf::Event::Closed>()) {
+        	disconnect();
+        	_window->close();
+        } else if (event->getIf<sf::Event::Resized>()) {
+        	_state = GameState::LostConnection;
+        	disconnect();
+        }
+
 		switch (_state) {
 		case GameState::MainMenu:
 			_mainMenu->handleEvent(*event);
@@ -118,7 +123,7 @@ void Game::processEvents() {
 		if (_state == GameState::Playing) {
 			if (event->is<sf::Event::KeyPressed>()) {
 				auto keyEvent = event->getIf<sf::Event::KeyPressed>();
-				if (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::Z)
+				if (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::Z || keyEvent->code == sf::Keyboard::Key::W)
 					sendPlayerData(-1);
 				else if (keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S)
 					sendPlayerData(1);
@@ -126,7 +131,7 @@ void Game::processEvents() {
 			else if (event->is<sf::Event::KeyReleased>()) {
 				auto keyEvent = event->getIf<sf::Event::KeyReleased>();
 				if (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::Z ||
-					keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S)
+					keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S || keyEvent->code == sf::Keyboard::Key::W)
 					sendPlayerData(0);
 			}
 		}
@@ -134,6 +139,12 @@ void Game::processEvents() {
 }
 
 void Game::update(float deltaTime) {
+	if (!_winsockClient || !_winsockClient->isConnected()) {
+		_state = GameState::LostConnection;
+		disconnect();
+		return;
+	}
+
 	if (_state != GameState::Playing) return;
 	processServerMessages();
 }
@@ -181,7 +192,10 @@ void Game::checkForPlayers() {
 }
 
 void Game::processServerMessages() {
-	if (!_winsockClient || !_winsockClient->isConnected()) return;
+	if (!_winsockClient || !_winsockClient->isConnected()) {
+		_state = GameState::LostConnection;
+		return;
+	}
 
 	std::string messageStr = _winsockClient->receiveData();
 	if (messageStr.empty()) return;
@@ -192,6 +206,17 @@ void Game::processServerMessages() {
 	try {
 		json message = json::parse(messageStr);
 		std::string type = message["type"];
+
+		if (type == "player_disconnected") {
+			int disconnectedPlayer = message["content"]["player_id"];
+			if (disconnectedPlayer == 1) {
+				_playMenu->setContent(_player1Score->getPlayerName() + " is disconnected");
+			} else if (disconnectedPlayer == 2) {
+				_playMenu->setContent(_player2Score->getPlayerName() + " is disconnected");
+			}
+			_state = GameState::LostConnection;
+			return;
+		}
 
 		if (type == "update") {
 			// Ball
@@ -304,4 +329,18 @@ void Game::render() {
     }
 
     _window->display();
+}
+
+void Game::disconnect() {
+	if (_winsockClient && _winsockClient->isConnected()) {
+		json message = {
+			{"type", "disconnect"},
+			{"content", {
+	                {"player_id", _playerId}
+			}}
+		};
+		_winsockClient->sendData(message.dump());
+		_winsockClient->disconnect();
+		std::cout << "Disconnected: " << message << std::endl;
+	}
 }
