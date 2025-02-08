@@ -72,6 +72,9 @@ void Server::Run()
 		case ServerState::GAME_ENDED:
 			readMessage();
 			break;
+		case ServerState::PAUSED:
+			readMessage();
+			break;
 		case ServerState::CLOSED:
 			Close();
 			break;
@@ -177,6 +180,9 @@ void Server::processEvents()
 		case ServerState::GAME_ENDED:
 			_serverRunning->handleEvent(*event);
 			break;
+		case ServerState::PAUSED:
+			_serverRunning->handleEvent(*event);
+			break;
 		case ServerState::CLOSED:
 			break;
 		default:
@@ -212,6 +218,8 @@ void Server::render()
 
 void Server::decodeClientMessages(const std::string& clientName, nlohmann::json messageContent)
 {
+	std::cout << "[SERVEUR] Message re�u de " << clientName << " : " << messageContent.dump() << std::endl;
+
 	if (messageContent["type"] == "connect")
 		newClientConnected(clientName, messageContent);
 	else if (messageContent["type"] == "input" && _state != ServerState::GAME_ENDED)
@@ -220,6 +228,10 @@ void Server::decodeClientMessages(const std::string& clientName, nlohmann::json 
 		playerDisconnect(clientName, messageContent);
 	else if (messageContent["type"] == "restart")
 		clientRestart(clientName, messageContent);
+  else if (messageContent["type"] == "pause")
+		setPauseState(true);
+	else if (messageContent["type"] == "resume")
+		setPauseState(false);
 }
 
 void Server::playerDisconnect(const std::string& clientId, nlohmann::json messageContent) {
@@ -231,7 +243,7 @@ void Server::playerDisconnect(const std::string& clientId, nlohmann::json messag
 	auto it = std::find(_clientsList.begin(), _clientsList.end(), clientId);
 	if (it != _clientsList.end()) {
 		_clientsList.erase(it);
-	}
+	}	
 	_clientsMap.erase(clientId);
 
 	std::string disconnectedPlayerName = _clientsNamesList[clientId];
@@ -248,6 +260,17 @@ void Server::playerDisconnect(const std::string& clientId, nlohmann::json messag
 
 	_serverRunning->addNewClient(disconnectedPlayerName + " has disconnected");
 }
+
+void Server::setPauseState(bool paused) {
+	_state = paused ? ServerState::PAUSED : ServerState::GAME_STARTED;
+
+	json pauseMessage = { {"type", paused ? "pause" : "resume"} };
+	std::cout << "[SERVEUR] Envoi de " << pauseMessage.dump() << " � tous les clients" << std::endl;
+
+	sendMessageToAll(pauseMessage.dump());
+}
+
+
 
 void Server::newClientConnected(const std::string& clientId, nlohmann::json messageContent)
 {
