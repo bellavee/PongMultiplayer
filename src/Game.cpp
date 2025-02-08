@@ -95,16 +95,14 @@ void Game::resumeGame() {
 	_winsockClient->sendData(message.dump());
 }
 
-
-
-
 void Game::backToMenu()
 {
     _state = GameState::MainMenu;
 
 	_player1Score->reset();
 	_player2Score->reset();
-	resetBall();	
+	resetBall();
+	disconnect();
 }
 
 void Game::quit()
