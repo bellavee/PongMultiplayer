@@ -20,5 +20,4 @@ const float PADDLE_SPEED = 400.0f;
 const float BALL_RADIUS = 20.0f;
 const float BALL_SPEED = 25.f;
 
-constexpr int WINNING_SCORE = 5
-;
+constexpr int WINNING_SCORE = 7;

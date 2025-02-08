@@ -14,6 +14,7 @@ public:
     void move(float offset);
     void keepInBounds(float minY, float maxY);
     float getHeight() const;
+    void reset(float x, float y);
 
 private:
     sf::RectangleShape* _rectangleShape;

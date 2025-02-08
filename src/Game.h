@@ -45,10 +45,14 @@ private:
     void sendPauseRequest();
     void update(float deltaTime);
     void render();
+
+    void disconnect();
+
     void handleCollisions();
     void resetBall();
     void checkForPlayers();
     void processServerMessages();
+    void sendRestartRequest();
 
     void sendPlayerData(int direction);
     std::vector<std::string> splitMessage(const std::string& message, char delimiter=',');

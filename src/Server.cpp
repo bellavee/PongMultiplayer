@@ -218,26 +218,54 @@ void Server::render()
 
 void Server::decodeClientMessages(const std::string& clientName, nlohmann::json messageContent)
 {
-	std::cout << "[SERVEUR] Message reçu de " << clientName << " : " << messageContent.dump() << std::endl;
+	std::cout << "[SERVEUR] Message reï¿½u de " << clientName << " : " << messageContent.dump() << std::endl;
 
 	if (messageContent["type"] == "connect")
 		newClientConnected(clientName, messageContent);
-	else if (messageContent["type"] == "input" && _state != ServerState::GAME_ENDED) {
+	else if (messageContent["type"] == "input" && _state != ServerState::GAME_ENDED)
 		clientIsMoving(clientName, messageContent);
-	}
-	else if (messageContent["type"] == "pause") {
+	else if (messageContent["type"] == "disconnect")
+		playerDisconnect(clientName, messageContent);
+	else if (messageContent["type"] == "restart")
+		clientRestart(clientName, messageContent);
+  else if (messageContent["type"] == "pause")
 		setPauseState(true);
-	}
-	else if (messageContent["type"] == "resume") {
+	else if (messageContent["type"] == "resume")
 		setPauseState(false);
-	}
+}
+
+void Server::playerDisconnect(const std::string& clientId, nlohmann::json messageContent) {
+	std::cout << "Player disconnect: " << messageContent << std::endl;
+	int disconnectedPlayerId = messageContent["content"]["player_id"];
+	if (disconnectedPlayerId == 0) return;
+	_players.erase(disconnectedPlayerId);
+
+	auto it = std::find(_clientsList.begin(), _clientsList.end(), clientId);
+	if (it != _clientsList.end()) {
+		_clientsList.erase(it);
+	}	
+	_clientsMap.erase(clientId);
+
+	std::string disconnectedPlayerName = _clientsNamesList[clientId];
+	_clientsNamesList.erase(clientId);
+
+	json disconnectMessage = {
+		{"type", "player_disconnected"},
+		{"content", {
+	            {"player_id", disconnectedPlayerId},
+				{"player_name", disconnectedPlayerName}
+		}}
+	};
+	sendMessageToAll(disconnectMessage.dump());
+
+	_serverRunning->addNewClient(disconnectedPlayerName + " has disconnected");
 }
 
 void Server::setPauseState(bool paused) {
 	_state = paused ? ServerState::PAUSED : ServerState::GAME_STARTED;
 
 	json pauseMessage = { {"type", paused ? "pause" : "resume"} };
-	std::cout << "[SERVEUR] Envoi de " << pauseMessage.dump() << " à tous les clients" << std::endl;
+	std::cout << "[SERVEUR] Envoi de " << pauseMessage.dump() << " ï¿½ tous les clients" << std::endl;
 
 	sendMessageToAll(pauseMessage.dump());
 }
@@ -260,8 +288,36 @@ void Server::newClientConnected(const std::string& clientId, nlohmann::json mess
 	sendMessage(messJson.dump(), clientId);
 	if (_players.size() == 2 && _state != ServerState::GAME_ENDED)
 		startGame();
-	if (_state == ServerState::GAME_ENDED)
-		handleEndGame();
+	/*if (_state == ServerState::GAME_ENDED)
+		handleEndGame();*/
+}
+
+bool Server::isPlayer(const std::string& valueToFind) {
+	for (const auto& pair : _players) {
+		if (pair.second == valueToFind) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void Server::clientRestart(const std::string& clientId, nlohmann::json messageContent)
+{
+	if (_state != ServerState::RUNNING || isPlayer(clientId))
+		return;
+	int id = (_players.size() < 2) ? _players.size() + 1 : 3;
+	_clientsNamesList[clientId] = messageContent["content"]["player_name"];
+	if (_players.size() < 2) {
+		_players[id] = clientId;
+		_serverRunning->addNewClient("Player " + _clientsNamesList[clientId] + " is trying to restart");
+	}
+	json messJson = {
+		{"type", "connected"},
+		{"content" , {{"player_id", id}}} };
+
+	sendMessage(messJson.dump(), clientId);
+	if (_players.size() == 2 && _state != ServerState::GAME_ENDED)
+		startGame();
 }
 
 void Server::clientIsMoving(const std::string& clientName, nlohmann::json messageContent)
@@ -333,12 +389,16 @@ void Server::updateGameState()
 
 void Server::update(float deltatime)
 {
+	if (_state != ServerState::GAME_STARTED)
+		return;
 	_ball->update(BALL_SPEED * deltatime);
 	checkScore();
 	updatePlayersPosition();
 	updateGameState();
 	checkPaddleCollision(*_ball, *_playerOnePaddle, true);
 	checkPaddleCollision(*_ball, *_playerTwoPaddle, false);
+	if (_state == ServerState::GAME_ENDED)
+		handleEndGame();
 }
 
 void Server::handleEndGame()
@@ -352,6 +412,20 @@ void Server::handleEndGame()
 				}}
 	};
 	sendMessageToAll(gameOverMessage.dump());
+	resetGame();
+	_state = ServerState::RUNNING;
+}
+
+void Server::resetGame()
+{
+	_players.clear();
+	_playerOneScore = 0;
+	_playerTwoScore = 0;
+	_playerOneDir = 0;
+	_playerTwoDir = 0;
+	_playerOnePaddle->reset(30.0f, WINDOW_HEIGHT / 2);
+	_playerTwoPaddle->reset(WINDOW_WIDTH - 30.0f, WINDOW_HEIGHT / 2);
+	_ball->reset(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 }
 
 void Server::checkPaddleCollision(Ball& ball, const Paddle& paddle, bool isLeftPaddle) {
@@ -406,7 +480,6 @@ void Server::checkScore() {
 		if (_playerOneScore >= WINNING_SCORE || _playerTwoScore >= WINNING_SCORE) {
 			_state = ServerState::GAME_ENDED;
 			_serverRunning->addNewClient(_clientsNamesList[_players[scoringPlayer]] + " is the winner");
-			handleEndGame();
 		} else {
 			json scoreMessage = {
 				{"type", "score"},

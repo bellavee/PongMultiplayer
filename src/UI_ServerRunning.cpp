@@ -18,13 +18,13 @@ UI_ServerRunning::UI_ServerRunning(float width, float height)
 	_title.setCharacterSize(40);
 	_title.setFillColor(sf::Color::White);
 	_title.setOrigin(_title.getGlobalBounds().getCenter());
-	_title.setPosition(sf::Vector2f(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 3));
+	_title.setPosition(sf::Vector2f(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 5));
 	_content.setFont(_contentFont);
 	_content.setString("");
 	_content.setCharacterSize(30);
 	_content.setFillColor(sf::Color::White);
 	_content.setOrigin(_content.getGlobalBounds().getCenter());
-	_content.setPosition(sf::Vector2f(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 2));
+	_content.setPosition(sf::Vector2f(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 3));
 }
 
 void UI_ServerRunning::draw(sf::RenderTarget& target, sf::RenderStates states) const
