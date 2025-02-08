@@ -26,3 +26,8 @@ void Paddle::keepInBounds(float minY, float maxY) {
 float Paddle::getHeight() const {
     return PADDLE_HEIGHT;
 }
+
+void Paddle::reset(float x, float y)
+{
+    setPosition({ x - PADDLE_WIDTH / 2, y - PADDLE_HEIGHT / 2 });
+}

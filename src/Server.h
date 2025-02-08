@@ -38,10 +38,9 @@ private:
 	void processEvents();
 	void render();
 	void decodeClientMessages(const std::string& clientName, nlohmann::json messageContent);
-
 	void playerDisconnect(const std::string &clientId, nlohmann::json messageContent);
-
 	void newClientConnected(const std::string& clientName, nlohmann::json messageContent);
+	void clientRestart(const std::string& clientName, nlohmann::json messageContent);
 	void clientIsMoving(const std::string& clientName, nlohmann::json messageContent);
 	void updatePlayersPosition();
 	void startGame();
@@ -49,10 +48,12 @@ private:
 	void updateGameState();
 	void update(float deltatime);
 	void handleEndGame();
+	void resetGame();
 
 	void checkPaddleCollision(Ball &ball, const Paddle &paddle, bool isLeftPaddle);
 
 	void checkScore();
+	bool isPlayer(const std::string& valueToFind);
 
 	ServerState _state;
 	SOCKET m_serverSocket;

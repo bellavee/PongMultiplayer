@@ -88,7 +88,7 @@ void Game::backToMenu()
 
 	_player1Score->reset();
 	_player2Score->reset();
-	resetBall();
+	resetBall();	
 }
 
 void Game::quit()
@@ -127,6 +127,8 @@ void Game::processEvents() {
 					sendPlayerData(-1);
 				else if (keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S)
 					sendPlayerData(1);
+				if (keyEvent->code == sf::Keyboard::Key::R)
+					sendRestartRequest();
 			}
 			else if (event->is<sf::Event::KeyReleased>()) {
 				auto keyEvent = event->getIf<sf::Event::KeyReleased>();
@@ -178,10 +180,10 @@ void Game::checkForPlayers() {
 			}
 			std::cout << "Connected as player " << _playerId << std::endl;
 		} else if (type == "start") {
+			_playMenu->setContent("");
 			_player1Score->setPlayerName(message["content"]["player1_name"]);
 			_player2Score->setPlayerName(message["content"]["player2_name"]);
 			startGame();
-			std::cout << "Start game " << std::endl;
 		}
 
 	} catch (const json::exception& e) {
@@ -200,12 +202,16 @@ void Game::processServerMessages() {
 	std::string messageStr = _winsockClient->receiveData();
 	if (messageStr.empty()) return;
 
-	// auto [command, data] = parseCommand(messageStr);
-	//std::cout << messageStr << std::endl;
-
 	try {
 		json message = json::parse(messageStr);
 		std::string type = message["type"];
+
+		if (type == "start") {
+			_playMenu->setContent("");
+			_player1Score->setPlayerName(message["content"]["player1_name"]);
+			_player2Score->setPlayerName(message["content"]["player2_name"]);
+			startGame();
+		}
 
 		if (type == "player_disconnected") {
 			int disconnectedPlayer = message["content"]["player_id"];
@@ -264,7 +270,7 @@ void Game::processServerMessages() {
         }
         else if (type == "game_over") {
             int winner = message["content"]["winner"];
-			_playMenu->setContent(((winner == 1) ? _player1Score->getPlayerName() : _player2Score->getPlayerName()) + " is the winner !");
+			_playMenu->setContent(((winner == 1) ? _player1Score->getPlayerName() : _player2Score->getPlayerName()) + " is the winner !\n Press R key to restart");
             //backToMenu();
         }
 
@@ -272,6 +278,19 @@ void Game::processServerMessages() {
 		std::cerr << "JSON parsing error: " << e.what() << std::endl;
 	} catch (const std::exception& e) {
 		std::cerr << "Error processing message: " << e.what() << std::endl;
+	}
+}
+
+void Game::sendRestartRequest()
+{
+	if (_winsockClient && _winsockClient->isConnected()) {
+		json message = {
+			{"type", "restart"},
+			{"content", {
+				{"player_name", _mainMenu->getClientName()}
+			}}
+		};
+		_winsockClient->sendData(message.dump());
 	}
 }
 
