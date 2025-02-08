@@ -72,6 +72,9 @@ void Server::Run()
 		case ServerState::GAME_ENDED:
 			readMessage();
 			break;
+		case ServerState::PAUSED:
+			readMessage();
+			break;
 		case ServerState::CLOSED:
 			Close();
 			break;
@@ -177,6 +180,9 @@ void Server::processEvents()
 		case ServerState::GAME_ENDED:
 			_serverRunning->handleEvent(*event);
 			break;
+		case ServerState::PAUSED:
+			_serverRunning->handleEvent(*event);
+			break;
 		case ServerState::CLOSED:
 			break;
 		default:
@@ -212,12 +218,31 @@ void Server::render()
 
 void Server::decodeClientMessages(const std::string& clientName, nlohmann::json messageContent)
 {
+	std::cout << "[SERVEUR] Message reçu de " << clientName << " : " << messageContent.dump() << std::endl;
+
 	if (messageContent["type"] == "connect")
 		newClientConnected(clientName, messageContent);
 	else if (messageContent["type"] == "input" && _state != ServerState::GAME_ENDED) {
 		clientIsMoving(clientName, messageContent);
 	}
+	else if (messageContent["type"] == "pause") {
+		setPauseState(true);
+	}
+	else if (messageContent["type"] == "resume") {
+		setPauseState(false);
+	}
 }
+
+void Server::setPauseState(bool paused) {
+	_state = paused ? ServerState::PAUSED : ServerState::GAME_STARTED;
+
+	json pauseMessage = { {"type", paused ? "pause" : "resume"} };
+	std::cout << "[SERVEUR] Envoi de " << pauseMessage.dump() << " à tous les clients" << std::endl;
+
+	sendMessageToAll(pauseMessage.dump());
+}
+
+
 
 void Server::newClientConnected(const std::string& clientId, nlohmann::json messageContent)
 {

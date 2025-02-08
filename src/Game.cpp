@@ -57,7 +57,7 @@ void Game::run() {
     		checkForPlayers();
     	}
 
-		if (_state == GameState::Playing) {
+		if (_state == GameState::Playing || _state == GameState::Paused) {
 			update(deltaTime);
 		}
 
@@ -81,6 +81,22 @@ void Game::join()
 	_winsockClient->sendData(message.dump());
 	waitingGame();
 }
+
+void Game::resumeGame() {
+	if (!_winsockClient) {
+		return;
+	}
+
+	if (!_winsockClient->isConnected()) {
+		return;
+	}
+
+	json message = { {"type", "resume"} };
+	_winsockClient->sendData(message.dump());
+}
+
+
+
 
 void Game::backToMenu()
 {
@@ -130,11 +146,39 @@ void Game::processEvents() {
 					sendPlayerData(0);
 			}
 		}
+		if (_state == GameState::Playing) {
+			if (event->is<sf::Event::KeyPressed>()) {
+				auto keyEvent = event->getIf<sf::Event::KeyPressed>();
+				if (keyEvent->code == sf::Keyboard::Key::Escape) {
+					sendPauseRequest(); // Demande de pause au serveur
+				}
+			}
+		}
+		if (_state == GameState::Paused) {
+			if (event->is<sf::Event::KeyPressed>()) {
+				auto keyEvent = event->getIf<sf::Event::KeyPressed>();
+				if (keyEvent->code == sf::Keyboard::Key::Escape) {
+					resumeGame(); // Demande de pause au serveur
+				}
+			}
+		}
+
+
     }
 }
 
+void Game::sendPauseRequest() {
+	if (_winsockClient && _winsockClient->isConnected()) {
+		json message = {
+			{"type", "pause"}  // Envoie au serveur
+		};
+		_winsockClient->sendData(message.dump());
+	}
+}
+
+
 void Game::update(float deltaTime) {
-	if (_state != GameState::Playing) return;
+	//if (_state != GameState::Playing) return;
 	processServerMessages();
 }
 
@@ -242,6 +286,13 @@ void Game::processServerMessages() {
 			_playMenu->setContent(((winner == 1) ? _player1Score->getPlayerName() : _player2Score->getPlayerName()) + " is the winner !");
             //backToMenu();
         }
+		else if (type == "pause") {
+			_state = GameState::Paused;
+		}
+		else if (type == "resume") {
+			_state = GameState::Playing;
+		}
+
 
 	} catch (const json::exception& e) {
 		std::cerr << "JSON parsing error: " << e.what() << std::endl;

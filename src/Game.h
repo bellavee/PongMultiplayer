@@ -35,13 +35,14 @@ public:
 
     void join();
     void startGame() { _state = GameState::Playing; }
-    void resumeGame() { _state = GameState::Playing; }
+    void resumeGame();
     void waitingGame() { _state = GameState::Waiting; }
     void backToMenu();
     void quit();
 
 private:
     void processEvents();
+    void sendPauseRequest();
     void update(float deltaTime);
     void render();
     void handleCollisions();

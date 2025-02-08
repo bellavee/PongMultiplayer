@@ -18,6 +18,7 @@ enum class ServerState {
 	GAME_STARTED,
 	GAME_ENDED,
 	CLOSED,
+	PAUSED
 };
 
 
@@ -38,6 +39,7 @@ private:
 	void processEvents();
 	void render();
 	void decodeClientMessages(const std::string& clientName, nlohmann::json messageContent);
+	void setPauseState(bool paused);
 	void newClientConnected(const std::string& clientName, nlohmann::json messageContent);
 	void clientIsMoving(const std::string& clientName, nlohmann::json messageContent);
 	void updatePlayersPosition();
